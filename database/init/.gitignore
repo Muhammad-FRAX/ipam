@@ -1,0 +1,3 @@
+# Allow SQL migration files to be tracked despite the root .gitignore *.sql rule.
+# These are database init scripts that must be committed.
+!*.sql
