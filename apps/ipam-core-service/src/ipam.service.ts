@@ -157,37 +157,48 @@ export class IpamService {
   }
 
   async allocateIp(subnetId: string, ipAddress: string, metadata: any, deviceId?: string, isGateway?: boolean) {
-    // Fetch the parent subnet to get its CIDR
-    const subnetRows = await this.dataSource.query(
-      `SELECT cidr FROM subnets WHERE id = $1`,
-      [subnetId]
-    );
-    if (!subnetRows.length) {
-      throw new BadRequestException('Subnet not found');
-    }
-    const subnetCidr: string = subnetRows[0].cidr;
-
-    // Validate IP is a usable host address (excludes network, broadcast, and out-of-range)
-    if (!isHostAddress(ipAddress, subnetCidr)) {
-      throw new BadRequestException(
-        `IP ${ipAddress} is not a valid host address in subnet ${subnetCidr}`
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      // Lock the subnet row to serialize concurrent allocations for the same subnet
+      const subnetRows = await queryRunner.query(
+        `SELECT cidr FROM subnets WHERE id = $1 FOR UPDATE`,
+        [subnetId]
       );
-    }
+      if (!subnetRows.length) {
+        throw new BadRequestException('Subnet not found');
+      }
+      const subnetCidr: string = subnetRows[0].cidr;
 
-    // Check for duplicate IP within this subnet
-    const existing = await this.dataSource.query(
-      `SELECT id FROM ip_addresses WHERE subnet_id = $1 AND ip_address = $2 AND status = 'ALLOCATED'`,
-      [subnetId, ipAddress]
-    );
-    if (existing.length > 0) {
-      throw new BadRequestException(`IP ${ipAddress} is already allocated in this subnet`);
-    }
+      // Validate IP is a usable host address (excludes network, broadcast, and out-of-range)
+      if (!isHostAddress(ipAddress, subnetCidr)) {
+        throw new BadRequestException(
+          `IP ${ipAddress} is not a valid host address in subnet ${subnetCidr}`
+        );
+      }
 
-    const result = await this.dataSource.query(
-      `INSERT INTO ip_addresses (subnet_id, ip_address, status, metadata, device_id, is_gateway) VALUES ($1, $2, 'ALLOCATED', $3, $4, $5) RETURNING *`,
-      [subnetId, ipAddress, metadata, deviceId || null, isGateway || false]
-    );
-    return result[0];
+      // Check for duplicate IP within this subnet (inside the lock — race-safe)
+      const existing = await queryRunner.query(
+        `SELECT id FROM ip_addresses WHERE subnet_id = $1 AND ip_address = $2 AND status = 'ALLOCATED'`,
+        [subnetId, ipAddress]
+      );
+      if (existing.length > 0) {
+        throw new BadRequestException(`IP ${ipAddress} is already allocated in this subnet`);
+      }
+
+      const result = await queryRunner.query(
+        `INSERT INTO ip_addresses (subnet_id, ip_address, status, metadata, device_id, is_gateway) VALUES ($1, $2, 'ALLOCATED', $3, $4, $5) RETURNING *`,
+        [subnetId, ipAddress, metadata, deviceId || null, isGateway || false]
+      );
+      await queryRunner.commitTransaction();
+      return result[0];
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async releaseIp(id: string) {
