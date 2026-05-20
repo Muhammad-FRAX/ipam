@@ -1,16 +1,17 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { isSubnetContained, doSubnetsOverlap, isHostAddress } from '@ipam/shared-validation';
 
 @Injectable()
 export class IpamService {
   constructor(private dataSource: DataSource) {}
-  
+
   async getHealth() {
     try {
-       await this.dataSource.query('SELECT 1');
-       return { status: 'UP', service: 'ipam-core-service' };
-    } catch(e) {
-       return { status: 'DOWN', error: e.message };
+      await this.dataSource.query('SELECT 1');
+      return { status: 'UP', service: 'ipam-core-service' };
+    } catch (e) {
+      return { status: 'DOWN', error: e.message };
     }
   }
 
@@ -27,13 +28,13 @@ export class IpamService {
   }
 
   async createSubnet(
-    blockId: string, 
-    parentSubnetId: string | null, 
-    name: string, 
-    cidr: string, 
-    domainId?: string, 
-    vlanId?: string, 
-    serviceType?: string, 
+    blockId: string,
+    parentSubnetId: string | null,
+    name: string,
+    cidr: string,
+    domainId?: string,
+    vlanId?: string,
+    serviceType?: string,
     ownerId?: string,
     ipRangeType?: string,
     serviceEndIf?: string,
@@ -45,6 +46,39 @@ export class IpamService {
     requesterDepartment?: string,
     spoc?: string
   ) {
+    // Fetch the parent block CIDR to validate containment
+    const blockRows = await this.dataSource.query(
+      `SELECT cidr FROM ip_blocks WHERE id = $1`,
+      [blockId]
+    );
+    if (!blockRows.length) {
+      throw new BadRequestException(`Block ${blockId} not found`);
+    }
+    const blockCidr: string = blockRows[0].cidr;
+
+    if (!isSubnetContained(cidr, blockCidr)) {
+      throw new BadRequestException(
+        `Subnet ${cidr} is not contained in parent block ${blockCidr}`
+      );
+    }
+
+    // Fetch sibling subnets to check for overlaps
+    const parentFilter = parentSubnetId
+      ? `parent_subnet_id = $2`
+      : `parent_subnet_id IS NULL`;
+    const siblings = await this.dataSource.query(
+      `SELECT cidr FROM subnets WHERE block_id = $1 AND ${parentFilter}`,
+      parentSubnetId ? [blockId, parentSubnetId] : [blockId]
+    );
+
+    for (const sibling of siblings) {
+      if (doSubnetsOverlap(cidr, sibling.cidr)) {
+        throw new BadRequestException(
+          `Subnet ${cidr} overlaps with existing subnet ${sibling.cidr}`
+        );
+      }
+    }
+
     const result = await this.dataSource.query(
       `INSERT INTO subnets (
         block_id, parent_subnet_id, name, cidr, domain_id, vlan_id, service_type, owner_id,
@@ -123,23 +157,24 @@ export class IpamService {
   }
 
   async allocateIp(subnetId: string, ipAddress: string, metadata: any, deviceId?: string, isGateway?: boolean) {
-    // 1. Fetch the parent subnet to get its CIDR
+    // Fetch the parent subnet to get its CIDR
     const subnetRows = await this.dataSource.query(
-      `SELECT cidr FROM subnets WHERE id = $1`, [subnetId]
+      `SELECT cidr FROM subnets WHERE id = $1`,
+      [subnetId]
     );
     if (!subnetRows.length) {
       throw new BadRequestException('Subnet not found');
     }
-    const subnetCidr = subnetRows[0].cidr; // e.g. "10.1.0.0/24"
+    const subnetCidr: string = subnetRows[0].cidr;
 
-    // 2. Validate IP falls within subnet CIDR range
-    if (!this.isIpInSubnet(ipAddress, subnetCidr)) {
+    // Validate IP is a usable host address (excludes network, broadcast, and out-of-range)
+    if (!isHostAddress(ipAddress, subnetCidr)) {
       throw new BadRequestException(
-        `IP ${ipAddress} is not within subnet range ${subnetCidr}`
+        `IP ${ipAddress} is not a valid host address in subnet ${subnetCidr}`
       );
     }
 
-    // 3. Check for duplicate IP within this subnet
+    // Check for duplicate IP within this subnet
     const existing = await this.dataSource.query(
       `SELECT id FROM ip_addresses WHERE subnet_id = $1 AND ip_address = $2 AND status = 'ALLOCATED'`,
       [subnetId, ipAddress]
@@ -153,27 +188,6 @@ export class IpamService {
       [subnetId, ipAddress, metadata, deviceId || null, isGateway || false]
     );
     return result[0];
-  }
-
-  /** Parse an IPv4 address string to a 32-bit integer */
-  private ipToLong(ip: string): number {
-    const parts = ip.split('.').map(Number);
-    return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
-  }
-
-  /** Check if an IP address falls within a CIDR range */
-  private isIpInSubnet(ip: string, cidr: string): boolean {
-    const [network, prefixStr] = cidr.split('/');
-    const prefix = parseInt(prefixStr, 10);
-    if (isNaN(prefix) || prefix < 0 || prefix > 32) return false;
-
-    const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
-    const networkLong = this.ipToLong(network) & mask;
-    const broadcastLong = (networkLong | (~mask >>> 0)) >>> 0;
-    const ipLong = this.ipToLong(ip);
-
-    // IP must be within range (excluding network and broadcast for /31+)
-    return ipLong >= networkLong && ipLong <= broadcastLong;
   }
 
   async releaseIp(id: string) {
