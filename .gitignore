@@ -1,0 +1,105 @@
+# -------------------------
+# Node.js / npm / pnpm / yarn
+# -------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# -------------------------
+# Build / dist outputs
+# -------------------------
+dist/
+build/
+.cache/
+.tmp/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+coverage/
+
+# -------------------------
+# Environment / secrets
+# -------------------------
+.env
+.env.*
+*.local
+
+# -------------------------
+# Logs
+# -------------------------
+logs/
+*.log
+*.log.*
+*.out
+*.err
+
+# -------------------------
+# OS / Editor files
+# -------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.bak
+*.orig
+
+# -------------------------
+# IDE / tooling
+# -------------------------
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# -------------------------
+# Docker
+# -------------------------
+*.pid
+*.seed
+*.pid.lock
+docker-compose.override.yml
+docker-compose.dev.yml
+docker-compose.test.yml
+
+# -------------------------
+# Databases
+# -------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sql
+*.dump
+
+# -------------------------
+# Testing
+# -------------------------
+coverage/
+.jest/
+.cypress/
+playwright-report/
+test-results/
+
+# -------------------------
+# Misc
+# -------------------------
+*.tgz
+*.tar
+*.gz
+*.zip
+*.rar
+*.7z
+*.bak
+*.tmp
+*.lock

@@ -1,0 +1,218 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ipam_postgres
+    environment:
+      POSTGRES_USER: ipam_user
+      POSTGRES_PASSWORD: ipam_password
+      POSTGRES_DB: ipam_db
+    ports:
+      - "5442:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - ipam_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ipam_user -d ipam_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ipam_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ipam_network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: api-gateway
+    container_name: api-gateway
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+    networks:
+      - ipam_network
+    depends_on:
+      - auth-service
+      - ipam-core-service
+      - validation-engine-service
+      - request-workflow-service
+      - forecasting-insight-service
+      - audit-service
+      - configuration-service
+
+  auth-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: auth-service
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ipam-core-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: ipam-core-service
+    container_name: ipam-core-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  validation-engine-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: validation-engine-service
+    container_name: validation-engine-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  request-workflow-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: request-workflow-service
+    container_name: request-workflow-service
+    ports:
+      - "3008:3008"
+    environment:
+      PORT: 3008
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  forecasting-insight-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: forecasting-insight-service
+    container_name: forecasting-insight-service
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: 3005
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  audit-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: audit-service
+    container_name: audit-service
+    ports:
+      - "3006:3006"
+    environment:
+      PORT: 3006
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  configuration-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: configuration-service
+    container_name: configuration-service
+    ports:
+      - "3007:3007"
+    environment:
+      PORT: 3007
+      DB_HOST: postgres
+      DB_USER: ipam_user
+      DB_PASSWORD: ipam_password
+      DB_NAME: ipam_db
+    networks:
+      - ipam_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend-portal:
+    build:
+      context: ./apps/frontend-portal
+    container_name: frontend-portal
+    ports:
+      - "443:443"
+      - "80:80"
+    networks:
+      - ipam_network
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  ipam_network:
+    name: ipam_network

@@ -1,0 +1,35 @@
+{
+  "name": "ipam-platform",
+  "version": "1.0.0",
+  "description": "Phase 1 Flexible Standalone IPAM Platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "start": "npm run start --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/typeorm": "^11.0.1",
+    "axios": "^1.14.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "helmet": "^8.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "ipaddr.js": "^2.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0",
+    "typeorm": "^0.3.28"
+  }
+}

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise IPAM Platform - Comprehensive Solution Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                        },
+                        navy: {
+                            800: '#0c1222',
+                            900: '#070b14',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; line-height: 1.6; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
+        .hero-pattern { background-color: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 24px 24px; }
+        .gradient-text { background: linear-gradient(135deg, #0d9488 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .section-separator { height: 1px; background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%); margin: 4rem 0; }
+        .ui-mockup { border: 1px solid #e2e8f0; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .ui-mockup-header { background: #f1f5f9; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; display: flex; gap: 0.5rem; }
+        .ui-dot { width: 10px; height: 10px; border-radius: 50%; }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-100 selection:text-brand-900 overflow-x-hidden">
+
+    <!-- Header Section -->
+    <header class="relative overflow-hidden bg-white border-b border-slate-200 lg:py-32 py-20">
+        <div class="absolute inset-0 hero-pattern opacity-60"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-50 rounded-full blur-3xl opacity-60"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-60"></div>
+        
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center justify-center p-3 bg-brand-50 rounded-2xl mb-8 shadow-sm border border-brand-100">
+                <i class="ph-fill ph-circles-three pr-2 text-brand-600 text-2xl"></i>
+                <span class="font-display font-bold text-brand-700 tracking-wider text-sm uppercase">Phase 1 Architecture</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 drop-shadow-sm">
+                Enterprise <span class="gradient-text">IPAM</span> Solution
+            </h1>
+            <p class="mt-6 max-w-3xl mx-auto text-xl text-slate-600 font-light">
+                A highly comprehensive, standalone IP Address Management platform built with strict boundary enforcement, robust lifecycle workflows, and a predictive capacity insight engine.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-32">
+        
+        <!-- 1. Executive Summary & Capabilities -->
+        <section id="capabilities" class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="text-4xl font-bold text-slate-900 mb-6">Unified Network Intelligence</h2>
+                <p class="text-lg text-slate-600 mb-8">
+                    The platform abstracts complex CIDR mathematics and legacy CLI operations into an intuitive, visually driven portal. It bridges the gap between network engineering and organizational workflows.
+                </p>
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 shrink-0 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mt-1">
+                            <i class="ph ph-cube text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Total Lifecycle Management</h3>
+                            <p class="text-slate-600 mt-2">End-to-end routing of IP allocations from Draft creation through multi-tier organizational Approvals, automated allocation, and release.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 shrink-0 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mt-1">
+                            <i class="ph ph-chart-polar text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Deep Operational Insight</h3>
+                            <p class="text-slate-600 mt-2">The proprietary Request & Planning 360 engine surfaces fragmentation risks, predicts subnet exhaustion, and enforces network utilization SLAs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-tr from-brand-100 to-blue-50 transform rotate-3 rounded-3xl -z-10"></div>
+                <div class="ui-mockup bg-white">
+                    <div class="ui-mockup-header">
+                        <div class="ui-dot bg-rose-400"></div>
+                        <div class="ui-dot bg-amber-400"></div>
+                        <div class="ui-dot bg-emerald-400"></div>
+                    </div>
+                    <div class="p-6 bg-slate-900 text-slate-300">
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="font-display font-medium text-white text-lg">Platform Dashboard Overview</h4>
+                            <span class="text-xs tracking-wider uppercase text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full"><i class="ph-fill ph-check-circle mr-1"></i>Healthy</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                <div class="text-slate-400 text-xs uppercase tracking-widest mb-1">Total Subnets</div>
+                                <div class="text-3xl font-display text-white">1,248</div>
+                            </div>
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                <div class="text-slate-400 text-xs uppercase tracking-widest mb-1">Utilization</div>
+                                <div class="text-3xl font-display text-brand-400">68.2%</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-800 h-24 rounded-xl border border-slate-700 flex items-end p-4 gap-2">
+                            <div class="w-1/6 bg-brand-500/80 rounded-t h-2/6"></div>
+                            <div class="w-1/6 bg-brand-500/80 rounded-t h-3/6"></div>
+                            <div class="w-1/6 bg-brand-500/80 rounded-t h-5/6"></div>
+                            <div class="w-1/6 bg-brand-500/80 rounded-t h-4/6"></div>
+                            <div class="w-1/6 bg-brand-500 rounded-t h-[90%] block relative shadow-[0_0_15px_rgba(20,184,166,0.5)]"></div>
+                            <div class="w-1/6 bg-brand-500/80 rounded-t h-[60%]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-separator"></div>
+
+        <!-- 2. Frontend Portal Capabilities Deep Dive -->
+        <section id="portal">
+            <div class="text-center mb-16">
+                <span class="text-brand-600 font-bold tracking-widest uppercase text-sm">Rich UI Experience</span>
+                <h2 class="text-4xl font-bold text-slate-900 mt-2">Frontend Portal Capabilities</h2>
+                <p class="max-w-2xl mx-auto mt-4 text-slate-600 text-lg">The frontend is a React-powered Web Portal delivering a consumer-grade experience for complex networking tasks, entirely eliminating the need for CLI management.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
+                <!-- IP Topology -->
+                <div class="glass-card rounded-2xl p-8 border-t-4 border-t-purple-500">
+                    <h3 class="font-display font-semibold text-2xl text-slate-900 flex items-center gap-3 mb-4">
+                        <i class="ph ph-tree-structure text-purple-600 bg-purple-50 p-2 rounded-lg"></i>
+                        Interactive IP Topology
+                    </h3>
+                    <p class="text-slate-600 mb-6">Visual tree representation of the entire IP Root Block and Subnet hierarchy. Users can directly drill down from large `/8` blocks down to tight `/32` individual hosts with real-time capacity indicators.</p>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li class="flex items-start"><i class="ph-fill ph-check-circle text-purple-500 mr-2 mt-1"></i> <strong>Cascading Tree Structure:</strong> Understand parent-child CIDR relationships instantly.</li>
+                        <li class="flex items-start"><i class="ph-fill ph-check-circle text-purple-500 mr-2 mt-1"></i> <strong>In-line Capacity Metrics:</strong> View block usage percentages directly within the topology map.</li>
+                        <li class="flex items-start"><i class="ph-fill ph-check-circle text-purple-500 mr-2 mt-1"></i> <strong>Metadata Tooltips:</strong> Hover over subnets to reveal department assignments and environment flags.</li>
+                    </ul>
+                </div>
+
+                <!-- Approval Workflow -->
+                <div class="glass-card rounded-2xl p-8 border-t-4 border-t-rose-500">
+                    <h3 class="font-display font-semibold text-2xl text-slate-900 flex items-center gap-3 mb-4">
+                        <i class="ph ph-gavel text-rose-600 bg-rose-50 p-2 rounded-lg"></i>
+                        Orchestrated Approvals
+                    </h3>
+                    <p class="text-slate-600 mb-6">A dedicated workspace bridging team requests with Network Administrator enforcement. No allocation happens outside the monitored workflow.</p>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li class="flex items-start"><i class="ph-fill ph-check-circle text-rose-500 mr-2 mt-1"></i> <strong>State Management:</strong> Requests transition through Draft &rarr; Submitted &rarr; Approved/Rejected.</li>
+                        <li class="flex items-start"><i class="ph-fill ph-check-circle text-rose-500 mr-2 mt-1"></i> <strong>Violation Blocking:</strong> System proactively warns approvers if a requested CIDR creates an overlap before approval.</li>
+                        <li class="flex items-start"><i class="ph-fill ph-check-circle text-rose-500 mr-2 mt-1"></i> <strong>Granular Audit Trail:</strong> Every approval action stamps the user ID and timestamp to the exact request payload.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <div class="section-separator"></div>
+
+        <!-- 3. Planning 360 Engine -->
+        <section id="planning-360" class="bg-slate-900 rounded-[2.5rem] p-8 md:p-16 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-500 opacity-5 rounded-full blur-[100px] -z-0 pointer-events-none"></div>
+            
+            <div class="relative z-10 text-center mb-16">
+                <span class="text-brand-400 font-bold tracking-widest uppercase text-sm">Strategic Forecasting</span>
+                <h2 class="text-4xl font-bold text-white mt-2">The Planning 360 Engine</h2>
+                <p class="max-w-3xl mx-auto mt-4 text-slate-400 text-lg">Beyond standard CRUD operations, the Planning 360 framework calculates network mathematical limits to provide proactive intelligence regarding capacity exhaustion, fragmentation, and SLA pressures.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                <!-- Subnet 360 -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700 p-8 rounded-3xl">
+                    <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <i class="ph ph-scan text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Subnet 360</h3>
+                    <p class="text-slate-400 mb-6 text-sm">Deep-dive mathematical analysis on an individual subnet boundary.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-500 uppercase font-semibold">Exhaustion Risk</span>
+                            <div class="mt-1 flex items-center text-rose-400 font-bold"><i class="ph-fill ph-warning-circle mr-2"></i> HIGH</div>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Utilization exceeds 90%. System recommends immediate expansion of parent block to prevent host denial.</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-500 uppercase font-semibold">Capacity</span>
+                            <div class="w-full bg-slate-800 h-2 mt-3 rounded-full overflow-hidden">
+                                <div class="bg-rose-500 w-[92%] h-full rounded-full"></div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-xs text-slate-400">
+                                <span>Allocated: 235</span>
+                                <span>Free: 21</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pool 360 -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700 p-8 rounded-3xl">
+                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <i class="ph ph-squares-four text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Pool 360</h3>
+                    <p class="text-slate-400 mb-6 text-sm">Analytical aggregation of structural root IP block fragmentation logic.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-500 uppercase font-semibold">Allocation Pressure</span>
+                            <div class="mt-1 flex items-center text-amber-400 font-bold"><i class="ph-fill ph-gauge mr-2"></i> ELEVATED</div>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Large number of active subnets detected. Consider contiguous mapping strategies.</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-500 uppercase font-semibold">Fragmentation Indicator</span>
+                            <div class="mt-1 flex items-center text-slate-300 font-bold">Medium</div>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Subnets are distributed without contiguous optimization across the CIDR space.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request 360 -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700 p-8 rounded-3xl">
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <i class="ph ph-clock-counter-clockwise text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Request 360</h3>
+                    <p class="text-slate-400 mb-6 text-sm">Full lifecycle SLA and compliance timeline for every network allocation ticket.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-500 uppercase font-semibold">SLA Violation Risk</span>
+                            <div class="mt-1 flex items-center text-emerald-400 font-bold"><i class="ph-fill ph-check-square mr-2"></i> COMPLETED</div>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Request approved under 24 hours. Organizational SLA adhered.</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-500 uppercase font-semibold">Immutable Audit</span>
+                            <ul class="text-xs text-slate-400 mt-3 space-y-2 relative border-l border-slate-700 ml-2 pl-3">
+                                <li class="relative"><span class="absolute -left-[17px] top-1 w-2 h-2 rounded-full bg-slate-600"></span>Draft Originated (09:12 AM)</li>
+                                <li class="relative"><span class="absolute -left-[17px] top-1 w-2 h-2 rounded-full bg-slate-600"></span>Submitted for Review (10:04 AM)</li>
+                                <li class="relative"><span class="absolute -left-[17px] top-1 w-2 h-2 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(20,184,166,0.8)]"></span>Approved internally (11:30 AM)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Architecture & Validation Enforcement -->
+        <section id="architecture">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-slate-900">Architecture & Edge Enforcement</h2>
+                <div class="w-24 h-1 bg-brand-500 mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200">
+                <div class="flex flex-col lg:flex-row gap-12">
+                    <div class="w-full lg:w-1/2">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">PostgreSQL CIDR Overlap Casting</h3>
+                        <p class="text-slate-600 mb-6">
+                            Unlike rigid string-matching tools, the Phase 1 Validations Engine harnesses deep native PostgreSQL operators for mathematical overlap checks. By actively casting incoming strings to `CIDR` types, the system performs binary-level evaluations before data is ever persisted.
+                        </p>
+                        <div class="bg-slate-900 rounded-xl p-4 font-mono text-sm text-green-400 shadow-inner mb-8">
+                            <span class="text-slate-500">// Native Overlap Query Validation</span><br>
+                            <span class="text-blue-300">SELECT</span> id, name, cidr<br>
+                            <span class="text-blue-300">FROM</span> subnets <br>
+                            <span class="text-blue-300">WHERE CAST</span>(cidr <span class="text-blue-300">AS</span> CIDR) && <span class="text-blue-300">CAST</span>($1 <span class="text-blue-300">AS</span> CIDR)
+                        </div>
+
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">API Gateway Routing</h3>
+                        <p class="text-slate-600">
+                            The frontend portal never communicates directly with individual microservices. All interactions cross through a centralized NestJS `http-proxy-middleware` API Gateway configured to rewrite `/api/*` structures into specific Docker DNS mapped service ports, ensuring internal service obfuscation.
+                        </p>
+                    </div>
+
+                    <div class="w-full lg:w-1/2 flex items-center justify-center">
+                        <div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative z-10">
+                            <!-- Mermaid Microservice Gateway Map -->
+                            <div class="mermaid">
+                                flowchart LR
+                                    UI([React Portal]) -- /api/ipam --> GW{API Gateway<br/>Port 3004}
+                                    UI -- /api/auth --> GW
+                                    UI -- /api/insight --> GW
+
+                                    GW -- proxy --> IC[IPAM Core<br/>:3002]
+                                    GW -- proxy --> AS[Auth Service<br/>:3001]
+                                    GW -- proxy --> FI[Insight Engine<br/>:3005]
+
+                                    IC -.-> DB[(PostgreSQL)]
+                                    AS -.-> DB
+                                    FI -.-> DB
+
+                                    classDef default fill:#f8fafc,stroke:#cbd5e1,stroke-width:2px;
+                                    classDef gw border:2px solid #0d9488,fill:#f0fdfa,color:#0f172a;
+                                    classDef db border:2px solid #3b82f6,fill:#eff6ff;
+
+                                    class GW gw;
+                                    class DB db;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Audit & Global Export Module -->
+        <section id="audit-export">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div>
+                    <div class="inline-flex items-center justify-center p-2 bg-amber-50 rounded-lg mb-4 text-amber-600">
+                        <i class="ph ph-shield-star text-2xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Centralized Audit Logging</h3>
+                    <p class="text-slate-600 mb-6">
+                        The `audit-service` maintains an immutable operational ledger. Every structural mutation (block creation, IP allocation, Request approval, System export) is asynchronously shipped to the Audit Engine. 
+                    </p>
+                    <p class="text-slate-600">
+                        Records retain the action `type` (e.g., EXPORT, ALLOCATE), targeted `entity_id`, initiating `user_id`, precise `timestamp`, and the complete JSON snapshot of the state details. This ensures complete multi-tenant tracking capabilities.
+                    </p>
+                </div>
+                
+                <div>
+                    <div class="inline-flex items-center justify-center p-2 bg-blue-50 rounded-lg mb-4 text-blue-600">
+                        <i class="ph ph-export text-2xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Multi-Format Compliance Exports</h3>
+                    <p class="text-slate-600 mb-6">
+                        Under the Forecasting & Insight Service, a dedicated structural export engine compiles real-time database snapshots into compliance-ready formats.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <i class="ph-fill ph-file-pdf text-rose-500 text-3xl"></i>
+                            <div>
+                                <span class="font-bold text-slate-900">PDF Document Generation</span>
+                                <p class="text-sm text-slate-500 mt-1">Generates structured managerial reports with timestamps, scope bounds, and truncated visual lists using PDFKit.</p>
+                            </div>
+                        </li>
+                        <li class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <i class="ph-fill ph-microsoft-excel-logo text-green-600 text-3xl"></i>
+                            <div>
+                                <span class="font-bold text-slate-900">Excel Virtual Workbooks</span>
+                                <p class="text-sm text-slate-500 mt-1">Multi-tabbed `.xlsx` exports automatically arranging hierarchical blocks and cascading IP allocations via ExcelJS.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-navy-900 border-t border-slate-800 py-16 mt-20 text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <i class="ph-fill ph-network text-2xl text-brand-500"></i>
+                <span class="font-display font-semibold text-white tracking-wide text-lg">Antigravity IPAM</span>
+            </div>
+            <div class="text-sm text-slate-500">
+                Phase 1 Technical Solution Draft &bull; Generated Document
+            </div>
+            <div class="flex gap-4">
+                <span class="px-3 py-1 bg-white/5 rounded-full text-xs border border-white/10 uppercase tracking-wider text-slate-300">Phase 1</span>
+                <span class="px-3 py-1 bg-brand-500/10 rounded-full text-xs font-semibold text-brand-400 uppercase tracking-wider border border-brand-500/20">Production Ready</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'default',
+            fontFamily: 'Inter',
+            themeVariables: {
+                primaryColor: '#ffffff',
+                primaryBorderColor: '#cbd5e1',
+                lineColor: '#64748b',
+                textColor: '#0f172a',
+                fontFamily: 'Inter'
+            }
+        });
+    </script>
+</body>
+</html>
