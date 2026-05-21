@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Req } from '@nestjs/common';
 import { WorkflowService } from './workflow.service';
 
 @Controller('workflow')
@@ -11,8 +11,19 @@ export class WorkflowController {
   }
 
   @Post('requests')
-  async createRequest(@Body() body: { type: string; requestedCidr: string; metadata?: any; submittedBy: string }) {
-    return this.service.createRequest(body.type, body.requestedCidr, body.metadata || {}, body.submittedBy);
+  async createRequest(
+    @Body() body: { type: string; requestedCidr: string; blockId?: string; metadata?: any; submittedBy: string },
+    @Req() req: any,
+  ) {
+    const userId: string | null = req.headers['x-user-id'] || null;
+    return this.service.createRequest(
+      body.type,
+      body.requestedCidr,
+      body.blockId || null,
+      body.metadata || {},
+      body.submittedBy,
+      userId,
+    );
   }
 
   @Get('requests')
@@ -21,12 +32,14 @@ export class WorkflowController {
   }
 
   @Put('requests/:id/approve')
-  async approveRequest(@Param('id') id: string) {
-    return this.service.approveRequest(id);
+  async approveRequest(@Param('id') id: string, @Req() req: any) {
+    const userId: string | null = req.headers['x-user-id'] || null;
+    return this.service.approveRequest(id, userId);
   }
 
   @Put('requests/:id/reject')
-  async rejectRequest(@Param('id') id: string) {
-    return this.service.rejectRequest(id);
+  async rejectRequest(@Param('id') id: string, @Req() req: any) {
+    const userId: string | null = req.headers['x-user-id'] || null;
+    return this.service.rejectRequest(id, userId);
   }
 }
