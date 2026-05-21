@@ -17,6 +17,7 @@
     "@ipam/shared-types": "1.0.0",
     "@ipam/shared-config": "1.0.0",
     "@ipam/shared-logging": "1.0.0",
+    "@ipam/shared-validation": "1.0.0",
     "exceljs": "^4.4.0",
     "json2csv": "^6.0.0-alpha.2",
     "pdfkit": "^0.15.0"

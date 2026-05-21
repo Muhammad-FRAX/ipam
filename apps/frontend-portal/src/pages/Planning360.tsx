@@ -140,7 +140,7 @@ export default function Planning360() {
                     </div>
                  </div>
                  <div className="bg-indigo-950/50 p-3 rounded-lg border border-indigo-500/10">
-                    <span className="block text-xs text-slate-400 mb-1">AI Recommendation</span>
+                    <span className="block text-xs text-slate-400 mb-1">Recommendation</span>
                     <p className="text-sm text-slate-200 leading-relaxed">{data.insight.recommendation}</p>
                  </div>
               </div>

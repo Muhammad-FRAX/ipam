@@ -56,7 +56,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-[#12121a]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl shadow-black/50 hover:border-white/10 transition-all duration-300 group">
-          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-8 tracking-wide">Allocation Forecast & Trend</h2>
+          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-8 tracking-wide">Allocation Trend (Last 12 Months)</h2>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={actualHistory} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -99,10 +99,10 @@ export default function Dashboard() {
                   <div key={i} className="flex flex-col p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-white/10 group/item">
                     <div className="flex justify-between items-center mb-3">
                        <span className="font-semibold tracking-wide text-slate-200 inline-block truncate max-w-[120px]" title={risk.cidr}>{risk.cidr}</span>
-                       <span className="text-xs text-red-400 font-bold bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/10 group-hover/item:border-red-500/30 transition-colors">{risk.allocated_count} IPs</span>
+                       <span className="text-xs text-red-400 font-bold bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/10 group-hover/item:border-red-500/30 transition-colors">{risk.utilization_pct ?? risk.allocated_count}%</span>
                     </div>
                     <div className="w-full bg-[#0a0a0e] rounded-full h-2 overflow-hidden border border-white/5">
-                      <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full w-[85%] shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                      <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ width: `${Math.min(100, Number(risk.utilization_pct ?? 85))}%` }}></div>
                     </div>
                   </div>
                 ))}
