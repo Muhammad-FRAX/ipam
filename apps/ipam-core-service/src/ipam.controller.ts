@@ -1,5 +1,14 @@
-import { Controller, Get, Post, Body, Param, Put, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Req, Query } from '@nestjs/common';
 import { IpamService } from './ipam.service';
+
+function isAdminUser(req: any): boolean {
+  try {
+    const roles: string[] = JSON.parse(req.headers['x-user-roles'] || '[]');
+    return roles.includes('ADMIN');
+  } catch {
+    return false;
+  }
+}
 
 @Controller('ipam')
 export class IpamController {
@@ -17,8 +26,10 @@ export class IpamController {
   }
 
   @Get('blocks')
-  async getBlocks() {
-    return this.service.getBlocks();
+  async getBlocks(@Query('page') page?: string, @Query('pageSize') pageSize?: string, @Req() req?: any) {
+    const userId: string | null = req?.headers['x-user-id'] || null;
+    const admin = isAdminUser(req);
+    return this.service.getBlocks(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50, userId, admin);
   }
 
   @Post('subnets')
@@ -32,13 +43,15 @@ export class IpamController {
   }
 
   @Get('subnets')
-  async getSubnets() {
-    return this.service.getSubnets();
+  async getSubnets(@Query('page') page?: string, @Query('pageSize') pageSize?: string, @Req() req?: any) {
+    const userId: string | null = req?.headers['x-user-id'] || null;
+    const admin = isAdminUser(req);
+    return this.service.getSubnets(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50, userId, admin);
   }
 
   @Get('domains')
-  async getDomains() {
-    return this.service.getDomains();
+  async getDomains(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.getDomains(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 100);
   }
 
   @Post('domains')
@@ -48,8 +61,8 @@ export class IpamController {
   }
 
   @Get('vlans')
-  async getVlans() {
-    return this.service.getVlans();
+  async getVlans(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.getVlans(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 100);
   }
 
   @Post('vlans')
@@ -59,8 +72,8 @@ export class IpamController {
   }
 
   @Get('sites')
-  async getSites() {
-    return this.service.getSites();
+  async getSites(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.getSites(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 100);
   }
 
   @Post('sites')
@@ -70,8 +83,8 @@ export class IpamController {
   }
 
   @Get('devices')
-  async getDevices() {
-    return this.service.getDevices();
+  async getDevices(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.getDevices(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 100);
   }
 
   @Post('devices')

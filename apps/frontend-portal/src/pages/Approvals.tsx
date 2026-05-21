@@ -10,7 +10,7 @@ export default function Approvals() {
   const loadRequests = async () => {
     try {
       const res = await axios.get('/api/workflow/requests');
-      setRequests(res.data);
+      setRequests(res.data?.items ?? []);
     } catch (err) {
       console.error(err);
     }

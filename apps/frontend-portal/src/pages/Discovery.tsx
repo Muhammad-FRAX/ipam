@@ -15,8 +15,8 @@ export default function Discovery() {
           axios.get('/api/ipam/blocks').catch(() => ({ data: [] })),
           axios.get('/api/ipam/subnets').catch(() => ({ data: [] }))
         ]);
-        setBlocks(bRes.data || []);
-        setSubnets(sRes.data || []);
+        setBlocks(bRes.data?.items ?? []);
+        setSubnets(sRes.data?.items ?? []);
       } catch (err) {
         console.error(err);
       }

@@ -22,10 +22,10 @@ export default function NetworkAssets() {
         axios.get('/api/ipam/vlans').catch(() => ({ data: [] })),
         axios.get('/api/ipam/devices').catch(() => ({ data: [] }))
       ]);
-      setSites(siteRes.data);
-      setDomains(domRes.data);
-      setVlans(vlanRes.data);
-      setDevices(devRes.data);
+      setSites(siteRes.data?.items ?? []);
+      setDomains(domRes.data?.items ?? []);
+      setVlans(vlanRes.data?.items ?? []);
+      setDevices(devRes.data?.items ?? []);
     } catch (e) {
       console.error(e);
     }

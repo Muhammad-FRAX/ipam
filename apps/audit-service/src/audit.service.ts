@@ -15,7 +15,15 @@ export class AuditService {
     return result[0];
   }
 
-  async getLogs() {
-    return this.dataSource.query(`SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 100`);
+  async getLogs(page = 1, pageSize = 50) {
+    const offset = (page - 1) * pageSize;
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT $1 OFFSET $2`,
+        [pageSize, offset]
+      ),
+      this.dataSource.query(`SELECT COUNT(*) FROM audit_logs`),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 }

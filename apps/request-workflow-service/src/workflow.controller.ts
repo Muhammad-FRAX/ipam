@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Req, Query } from '@nestjs/common';
 import { WorkflowService } from './workflow.service';
 
 @Controller('workflow')
@@ -27,8 +27,8 @@ export class WorkflowController {
   }
 
   @Get('requests')
-  async getRequests() {
-    return this.service.getRequests();
+  async getRequests(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.getRequests(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50);
   }
 
   @Put('requests/:id/approve')

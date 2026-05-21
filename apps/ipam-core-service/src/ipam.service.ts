@@ -17,9 +17,10 @@ export class IpamService {
   }
 
   async createBlock(name: string, cidr: string, domainId?: string, ownerId?: string, userId?: string | null) {
+    const effectiveOwner = ownerId || userId || null;
     const result = await this.dataSource.query(
       `INSERT INTO ip_blocks (name, cidr, domain_id, owner_id) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [name, cidr, domainId || null, ownerId || null]
+      [name, cidr, domainId || null, effectiveOwner]
     );
     const block = result[0];
     await logAudit(this.dataSource, {
@@ -32,10 +33,29 @@ export class IpamService {
     return block;
   }
 
-  async getBlocks() {
-    return this.dataSource.query(
-      `SELECT * FROM ip_blocks WHERE deleted_at IS NULL ORDER BY created_at DESC`
-    );
+  async getBlocks(page = 1, pageSize = 50, ownerId?: string | null, isAdmin = true) {
+    const offset = (page - 1) * pageSize;
+    if (isAdmin) {
+      const [rows, countRows] = await Promise.all([
+        this.dataSource.query(
+          `SELECT * FROM ip_blocks WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+          [pageSize, offset]
+        ),
+        this.dataSource.query(`SELECT COUNT(*) FROM ip_blocks WHERE deleted_at IS NULL`),
+      ]);
+      return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
+    }
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM ip_blocks WHERE deleted_at IS NULL AND (owner_id = $1 OR owner_id IS NULL) ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+        [ownerId, pageSize, offset]
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*) FROM ip_blocks WHERE deleted_at IS NULL AND (owner_id = $1 OR owner_id IS NULL)`,
+        [ownerId]
+      ),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
   async createSubnet(
@@ -98,7 +118,7 @@ export class IpamService {
         request_date, requester_name, requester_department, spoc
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
       [
-        blockId, parentSubnetId, name, cidr, domainId || null, vlanId || null, serviceType || null, ownerId || null,
+        blockId, parentSubnetId, name, cidr, domainId || null, vlanId || null, serviceType || null, ownerId || userId || null,
         ipRangeType || null, serviceEndIf || null, gatewayEndIf || null, vlanType || null, connectedElements || null,
         requestDate ? new Date(requestDate) : null, requesterName || null, requesterDepartment || null, spoc || null,
       ]
@@ -114,14 +134,41 @@ export class IpamService {
     return subnet;
   }
 
-  async getSubnets() {
-    return this.dataSource.query(
-      `SELECT * FROM subnets WHERE deleted_at IS NULL ORDER BY created_at DESC`
-    );
+  async getSubnets(page = 1, pageSize = 50, ownerId?: string | null, isAdmin = true) {
+    const offset = (page - 1) * pageSize;
+    if (isAdmin) {
+      const [rows, countRows] = await Promise.all([
+        this.dataSource.query(
+          `SELECT * FROM subnets WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+          [pageSize, offset]
+        ),
+        this.dataSource.query(`SELECT COUNT(*) FROM subnets WHERE deleted_at IS NULL`),
+      ]);
+      return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
+    }
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM subnets WHERE deleted_at IS NULL AND (owner_id = $1 OR owner_id IS NULL) ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+        [ownerId, pageSize, offset]
+      ),
+      this.dataSource.query(
+        `SELECT COUNT(*) FROM subnets WHERE deleted_at IS NULL AND (owner_id = $1 OR owner_id IS NULL)`,
+        [ownerId]
+      ),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
-  async getDomains() {
-    return this.dataSource.query(`SELECT * FROM network_domains ORDER BY name ASC`);
+  async getDomains(page = 1, pageSize = 100) {
+    const offset = (page - 1) * pageSize;
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM network_domains ORDER BY name ASC LIMIT $1 OFFSET $2`,
+        [pageSize, offset]
+      ),
+      this.dataSource.query(`SELECT COUNT(*) FROM network_domains`),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
   async createDomain(name: string, vrfName?: string, description?: string, userId?: string | null) {
@@ -140,8 +187,16 @@ export class IpamService {
     return domain;
   }
 
-  async getVlans() {
-    return this.dataSource.query(`SELECT * FROM vlans ORDER BY vlan_id ASC`);
+  async getVlans(page = 1, pageSize = 100) {
+    const offset = (page - 1) * pageSize;
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM vlans ORDER BY vlan_id ASC LIMIT $1 OFFSET $2`,
+        [pageSize, offset]
+      ),
+      this.dataSource.query(`SELECT COUNT(*) FROM vlans`),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
   async createVlan(vlanId: number, name: string, siteId?: string, domainId?: string, description?: string, userId?: string | null) {
@@ -160,8 +215,16 @@ export class IpamService {
     return vlan;
   }
 
-  async getSites() {
-    return this.dataSource.query(`SELECT * FROM sites ORDER BY name ASC`);
+  async getSites(page = 1, pageSize = 100) {
+    const offset = (page - 1) * pageSize;
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM sites ORDER BY name ASC LIMIT $1 OFFSET $2`,
+        [pageSize, offset]
+      ),
+      this.dataSource.query(`SELECT COUNT(*) FROM sites`),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
   async createSite(name: string, region?: string, siteCode?: string, userId?: string | null) {
@@ -180,8 +243,16 @@ export class IpamService {
     return site;
   }
 
-  async getDevices() {
-    return this.dataSource.query(`SELECT * FROM devices ORDER BY hostname ASC`);
+  async getDevices(page = 1, pageSize = 100) {
+    const offset = (page - 1) * pageSize;
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT * FROM devices ORDER BY hostname ASC LIMIT $1 OFFSET $2`,
+        [pageSize, offset]
+      ),
+      this.dataSource.query(`SELECT COUNT(*) FROM devices`),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
   async createDevice(hostname: string, role?: string, siteId?: string, managementIp?: string, userId?: string | null) {

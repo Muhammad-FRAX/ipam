@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { AuditService } from './audit.service';
 
 @Controller('audit')
@@ -14,7 +14,7 @@ export class AuditController {
   }
 
   @Get()
-  async getLogs() {
-    return this.service.getLogs();
+  async getLogs(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.getLogs(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50);
   }
 }
