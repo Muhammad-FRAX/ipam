@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Req } from '@nestjs/common';
 import { ConfigService } from './config.service';
 
 @Controller('config')
@@ -14,7 +14,8 @@ export class ConfigController {
   }
 
   @Put(':key')
-  async setConfig(@Param('key') key: string, @Body() body: { value: any }) {
-    return this.service.setConfig(key, body.value);
+  async setConfig(@Param('key') key: string, @Body() body: { value: any }, @Req() req: any) {
+    const userId: string | null = req.headers['x-user-id'] || null;
+    return this.service.setConfig(key, body.value, userId);
   }
 }
