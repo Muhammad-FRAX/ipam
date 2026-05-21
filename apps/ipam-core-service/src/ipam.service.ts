@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { isSubnetContained, doSubnetsOverlap, isHostAddress } from '@ipam/shared-validation';
+import { logAudit } from '@ipam/shared-audit';
 
 @Injectable()
 export class IpamService {
@@ -15,16 +16,26 @@ export class IpamService {
     }
   }
 
-  async createBlock(name: string, cidr: string, domainId?: string, ownerId?: string) {
+  async createBlock(name: string, cidr: string, domainId?: string, ownerId?: string, userId?: string | null) {
     const result = await this.dataSource.query(
       `INSERT INTO ip_blocks (name, cidr, domain_id, owner_id) VALUES ($1, $2, $3, $4) RETURNING *`,
       [name, cidr, domainId || null, ownerId || null]
     );
-    return result[0];
+    const block = result[0];
+    await logAudit(this.dataSource, {
+      action: 'BLOCK_CREATED',
+      entity: 'ip_blocks',
+      entityId: block.id,
+      userId: userId ?? null,
+      details: { name, cidr },
+    });
+    return block;
   }
 
   async getBlocks() {
-    return this.dataSource.query(`SELECT * FROM ip_blocks ORDER BY created_at DESC`);
+    return this.dataSource.query(
+      `SELECT * FROM ip_blocks WHERE deleted_at IS NULL ORDER BY created_at DESC`
+    );
   }
 
   async createSubnet(
@@ -44,11 +55,12 @@ export class IpamService {
     requestDate?: string,
     requesterName?: string,
     requesterDepartment?: string,
-    spoc?: string
+    spoc?: string,
+    userId?: string | null,
   ) {
     // Fetch the parent block CIDR to validate containment
     const blockRows = await this.dataSource.query(
-      `SELECT cidr FROM ip_blocks WHERE id = $1`,
+      `SELECT cidr FROM ip_blocks WHERE id = $1 AND deleted_at IS NULL`,
       [blockId]
     );
     if (!blockRows.length) {
@@ -67,7 +79,7 @@ export class IpamService {
       ? `parent_subnet_id = $2`
       : `parent_subnet_id IS NULL`;
     const siblings = await this.dataSource.query(
-      `SELECT cidr FROM subnets WHERE block_id = $1 AND ${parentFilter}`,
+      `SELECT cidr FROM subnets WHERE block_id = $1 AND ${parentFilter} AND deleted_at IS NULL`,
       parentSubnetId ? [blockId, parentSubnetId] : [blockId]
     );
 
@@ -88,82 +100,144 @@ export class IpamService {
       [
         blockId, parentSubnetId, name, cidr, domainId || null, vlanId || null, serviceType || null, ownerId || null,
         ipRangeType || null, serviceEndIf || null, gatewayEndIf || null, vlanType || null, connectedElements || null,
-        requestDate ? new Date(requestDate) : null, requesterName || null, requesterDepartment || null, spoc || null
+        requestDate ? new Date(requestDate) : null, requesterName || null, requesterDepartment || null, spoc || null,
       ]
     );
-    return result[0];
+    const subnet = result[0];
+    await logAudit(this.dataSource, {
+      action: 'SUBNET_CREATED',
+      entity: 'subnets',
+      entityId: subnet.id,
+      userId: userId ?? null,
+      details: { name, cidr, blockId },
+    });
+    return subnet;
   }
 
   async getSubnets() {
-    return this.dataSource.query(`SELECT * FROM subnets ORDER BY created_at DESC`);
+    return this.dataSource.query(
+      `SELECT * FROM subnets WHERE deleted_at IS NULL ORDER BY created_at DESC`
+    );
   }
 
   async getDomains() {
     return this.dataSource.query(`SELECT * FROM network_domains ORDER BY name ASC`);
   }
 
-  async createDomain(name: string, vrfName?: string, description?: string) {
+  async createDomain(name: string, vrfName?: string, description?: string, userId?: string | null) {
     const result = await this.dataSource.query(
       `INSERT INTO network_domains (name, vrf_name, description) VALUES ($1, $2, $3) RETURNING *`,
       [name, vrfName || null, description || null]
     );
-    return result[0];
+    const domain = result[0];
+    await logAudit(this.dataSource, {
+      action: 'DOMAIN_CREATED',
+      entity: 'network_domains',
+      entityId: domain.id,
+      userId: userId ?? null,
+      details: { name },
+    });
+    return domain;
   }
 
   async getVlans() {
     return this.dataSource.query(`SELECT * FROM vlans ORDER BY vlan_id ASC`);
   }
 
-  async createVlan(vlanId: number, name: string, siteId?: string, domainId?: string, description?: string) {
+  async createVlan(vlanId: number, name: string, siteId?: string, domainId?: string, description?: string, userId?: string | null) {
     const result = await this.dataSource.query(
       `INSERT INTO vlans (vlan_id, name, site_id, domain_id, description) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [vlanId, name, siteId || null, domainId || null, description || null]
     );
-    return result[0];
+    const vlan = result[0];
+    await logAudit(this.dataSource, {
+      action: 'VLAN_CREATED',
+      entity: 'vlans',
+      entityId: vlan.id,
+      userId: userId ?? null,
+      details: { vlanId, name },
+    });
+    return vlan;
   }
 
   async getSites() {
     return this.dataSource.query(`SELECT * FROM sites ORDER BY name ASC`);
   }
 
-  async createSite(name: string, region?: string, siteCode?: string) {
+  async createSite(name: string, region?: string, siteCode?: string, userId?: string | null) {
     const result = await this.dataSource.query(
       `INSERT INTO sites (name, region, site_code) VALUES ($1, $2, $3) RETURNING *`,
       [name, region || null, siteCode || null]
     );
-    return result[0];
+    const site = result[0];
+    await logAudit(this.dataSource, {
+      action: 'SITE_CREATED',
+      entity: 'sites',
+      entityId: site.id,
+      userId: userId ?? null,
+      details: { name },
+    });
+    return site;
   }
 
   async getDevices() {
     return this.dataSource.query(`SELECT * FROM devices ORDER BY hostname ASC`);
   }
 
-  async createDevice(hostname: string, role?: string, siteId?: string, managementIp?: string) {
+  async createDevice(hostname: string, role?: string, siteId?: string, managementIp?: string, userId?: string | null) {
     const result = await this.dataSource.query(
       `INSERT INTO devices (hostname, role, site_id, management_ip) VALUES ($1, $2, $3, $4) RETURNING *`,
       [hostname, role || null, siteId || null, managementIp || null]
     );
-    return result[0];
+    const device = result[0];
+    await logAudit(this.dataSource, {
+      action: 'DEVICE_CREATED',
+      entity: 'devices',
+      entityId: device.id,
+      userId: userId ?? null,
+      details: { hostname },
+    });
+    return device;
   }
 
-  async deleteBlock(id: string) {
-    await this.dataSource.query(`DELETE FROM ip_blocks WHERE id = $1`, [id]);
+  async deleteBlock(id: string, userId?: string | null) {
+    await this.dataSource.query(
+      `UPDATE ip_blocks SET deleted_at = NOW() WHERE id = $1`,
+      [id]
+    );
+    await logAudit(this.dataSource, {
+      action: 'BLOCK_DELETED',
+      entity: 'ip_blocks',
+      entityId: id,
+      userId: userId ?? null,
+      details: {},
+    });
     return { success: true };
   }
 
-  async deleteSubnet(id: string) {
-    await this.dataSource.query(`DELETE FROM subnets WHERE id = $1`, [id]);
+  async deleteSubnet(id: string, userId?: string | null) {
+    await this.dataSource.query(
+      `UPDATE subnets SET deleted_at = NOW() WHERE id = $1`,
+      [id]
+    );
+    await logAudit(this.dataSource, {
+      action: 'SUBNET_DELETED',
+      entity: 'subnets',
+      entityId: id,
+      userId: userId ?? null,
+      details: {},
+    });
     return { success: true };
   }
 
-  async allocateIp(subnetId: string, ipAddress: string, metadata: any, deviceId?: string, isGateway?: boolean) {
+  async allocateIp(subnetId: string, ipAddress: string, metadata: any, deviceId?: string, isGateway?: boolean, userId?: string | null) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       // Lock the subnet row to serialize concurrent allocations for the same subnet
       const subnetRows = await queryRunner.query(
-        `SELECT cidr FROM subnets WHERE id = $1 FOR UPDATE`,
+        `SELECT cidr FROM subnets WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`,
         [subnetId]
       );
       if (!subnetRows.length) {
@@ -192,7 +266,16 @@ export class IpamService {
         [subnetId, ipAddress, metadata, deviceId || null, isGateway || false]
       );
       await queryRunner.commitTransaction();
-      return result[0];
+      const ip = result[0];
+
+      await logAudit(this.dataSource, {
+        action: 'IP_ALLOCATED',
+        entity: 'ip_addresses',
+        entityId: ip.id,
+        userId: userId ?? null,
+        details: { ipAddress, subnetId },
+      });
+      return ip;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
@@ -201,11 +284,18 @@ export class IpamService {
     }
   }
 
-  async releaseIp(id: string) {
+  async releaseIp(id: string, userId?: string | null) {
     await this.dataSource.query(
       `UPDATE ip_addresses SET status = 'AVAILABLE', metadata = '{}'::jsonb WHERE id = $1`,
       [id]
     );
+    await logAudit(this.dataSource, {
+      action: 'IP_RELEASED',
+      entity: 'ip_addresses',
+      entityId: id,
+      userId: userId ?? null,
+      details: {},
+    });
     return { success: true };
   }
 }
