@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Plus, Search, FolderTree, X, Download, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Search, FolderTree, X, Download, Trash2, AlertCircle, Network } from 'lucide-react';
+import { SkeletonTable } from '../components/Skeleton';
 
 export default function Subnets() {
   const [blocks, setBlocks] = useState<any[]>([]);
@@ -10,6 +11,7 @@ export default function Subnets() {
   const [vlans, setVlans] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Modals state
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -46,7 +48,8 @@ export default function Subnets() {
   const [ipDeviceId, setIpDeviceId] = useState('');
   const [ipIsGateway, setIpIsGateway] = useState(false);
   
-  const loadTopology = async () => {
+  const loadTopology = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     try {
       const [bRes, sRes, cRes, domRes, vlanRes, siteRes, devRes] = await Promise.all([
         axios.get('/api/ipam/blocks'),
@@ -70,11 +73,13 @@ export default function Subnets() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadTopology();
+    loadTopology(true);
   }, []);
 
   const handleCreateBlock = async (e: React.FormEvent) => {
@@ -279,7 +284,8 @@ export default function Subnets() {
                </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-               {blocks.map((b: any) => (
+               {loading && <tr><td colSpan={5} className="p-0"><SkeletonTable rows={6} cols={5} /></td></tr>}
+               {!loading && blocks.map((b: any) => (
                   <React.Fragment key={'frag-'+b.id}>
                      <tr key={b.id} className="hover:bg-white/5 transition-colors bg-black/20 border-b border-t border-white/5">
                         <td className="px-8 py-4 flex items-center gap-3">
@@ -306,10 +312,24 @@ export default function Subnets() {
                   </React.Fragment>
                ))}
                
-               {blocks.length === 0 && (
+               {!loading && blocks.length === 0 && (
                  <tr>
-                    <td colSpan={5} className="px-8 py-16 text-center text-slate-500 text-sm">
-                       No blocks found. Create a root block to begin building your topology.
+                    <td colSpan={5}>
+                      <div className="flex flex-col items-center justify-center py-20 text-center px-8">
+                        <div className="w-20 h-20 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(99,102,241,0.1)]">
+                          <Network className="w-10 h-10 text-indigo-500/60" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-300 mb-2">No root blocks yet</h3>
+                        <p className="text-sm text-slate-500 max-w-sm mb-6">
+                          Start by defining the IP space you own. A root block like <span className="font-mono text-indigo-400">10.0.0.0/8</span> anchors your entire allocation tree.
+                        </p>
+                        <button
+                          onClick={() => setShowBlockModal(true)}
+                          className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
+                        >
+                          <Plus className="w-4 h-4" /> Create Your First Block
+                        </button>
+                      </div>
                     </td>
                  </tr>
                )}
