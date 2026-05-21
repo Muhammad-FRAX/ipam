@@ -7,6 +7,8 @@ export default function Config() {
   const [appLogo, setAppLogo] = useState('');
   const [highUtil, setHighUtil] = useState(80);
   const [maxIps, setMaxIps] = useState(65536);
+  const [exhaustionWarningPct, setExhaustionWarningPct] = useState(80);
+  const [riskPoolMinAllocations, setRiskPoolMinAllocations] = useState(5);
   const [orgStructure, setOrgStructure] = useState<any[]>([]);
 
   useEffect(() => {
@@ -18,6 +20,8 @@ export default function Config() {
         if (configMap.app_logo) setAppLogo(configMap.app_logo);
         if (configMap.high_util) setHighUtil(configMap.high_util);
         if (configMap.max_ips) setMaxIps(configMap.max_ips);
+        if (configMap.exhaustion_warning_pct) setExhaustionWarningPct(configMap.exhaustion_warning_pct);
+        if (configMap.risk_pool_min_allocations) setRiskPoolMinAllocations(configMap.risk_pool_min_allocations);
         if (configMap.org_structure) {
             try {
                let parsed = configMap.org_structure;
@@ -43,6 +47,8 @@ export default function Config() {
       await axios.put('/api/config/app_logo', { value: appLogo });
       await axios.put('/api/config/high_util', { value: highUtil });
       await axios.put('/api/config/max_ips', { value: maxIps });
+      await axios.put('/api/config/exhaustion_warning_pct', { value: exhaustionWarningPct });
+      await axios.put('/api/config/risk_pool_min_allocations', { value: riskPoolMinAllocations });
       await axios.put('/api/config/org_structure', { value: orgStructure });
       alert('Settings saved successfully!');
       window.location.reload();
@@ -91,6 +97,14 @@ export default function Config() {
                <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">Maximum IPs per block</label>
                   <input type="number" value={maxIps} onChange={e => setMaxIps(parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Exhaustion Warning Threshold (%)</label>
+                  <input type="number" value={exhaustionWarningPct} onChange={e => setExhaustionWarningPct(parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Risk Pool Min Allocations</label>
+                  <input type="number" value={riskPoolMinAllocations} onChange={e => setRiskPoolMinAllocations(parseInt(e.target.value))} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
                </div>
             </div>
          </div>

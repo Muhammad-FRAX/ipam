@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { getConfig } from '@ipam/shared-config';
 
 @Injectable()
 export class Planning360Service {
@@ -19,7 +20,12 @@ export class Planning360Service {
 
     const ips = await this.dataSource.query(`SELECT ip_address, status, metadata FROM ip_addresses WHERE subnet_id = $1`, [id]);
     const allocated = ips.filter((i: any) => i.status === 'ALLOCATED').length;
-    
+    const free = totalCapacity - allocated;
+
+    const exhaustionPct = Number(await getConfig(this.dataSource, 'exhaustion_warning_pct', 80));
+    const exhaustionThreshold = totalCapacity * (1 - exhaustionPct / 100);
+    const isHighRisk = free < exhaustionThreshold;
+
     return {
        identity: {
           id: subnet.id,
@@ -33,12 +39,14 @@ export class Planning360Service {
        capacity: {
           total: totalCapacity,
           allocated,
-          free: totalCapacity - allocated,
+          free,
           utilizationPercent: totalCapacity > 0 ? ((allocated / totalCapacity) * 100).toFixed(2) : 0
        },
        insight: {
-          exhaustionRisk: (totalCapacity - allocated) < (totalCapacity * 0.1) ? 'HIGH' : 'LOW',
-          recommendation: (totalCapacity - allocated) < (totalCapacity * 0.1) ? 'Consider expanding the parent pool and reclaiming unused blocks immediately.' : 'Capacity levels are healthy.'
+          exhaustionRisk: isHighRisk ? 'HIGH' : 'LOW',
+          recommendation: isHighRisk
+            ? `Expand pool: only ${free} addresses remain.`
+            : `Capacity levels are healthy. ${free} of ${totalCapacity} addresses available.`
        },
        allocations: ips
     };
@@ -101,6 +109,7 @@ export class Planning360Service {
       GROUP BY s.id, s.name, s.cidr
     `);
     
+    const exhaustionPct = Number(await getConfig(this.dataSource, 'exhaustion_warning_pct', 80));
     const exhaustionRisks = [];
     for (const sub of exhaustionQuery) {
        const cidrParts = sub.cidr.split('/');
@@ -108,7 +117,7 @@ export class Planning360Service {
        if (mask > 30) continue; // Skip /31 and /32
        const capacity = Math.pow(2, 32 - mask);
        const allocated = parseInt(sub.allocated_ips);
-       if (capacity > 0 && (allocated / capacity) > 0.8) {
+       if (capacity > 0 && (allocated / capacity) * 100 >= exhaustionPct) {
            exhaustionRisks.push({
                subnet_id: sub.id,
                name: sub.name,

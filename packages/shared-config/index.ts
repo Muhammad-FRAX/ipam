@@ -3,3 +3,5 @@ export const config = {
     return process.env[key] || defaultValue || '';
   }
 };
+
+export { getConfig } from './runtime';
