@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Plus, Search, FolderTree, X, Download, Trash2, AlertCircle, Network } from 'lucide-react';
+import { Plus, Search, FolderTree, X, Download, Trash2, AlertCircle, Network, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { SkeletonTable } from '../components/Skeleton';
+
+const subnetCapacity = (cidr: string): number => {
+  const prefix = parseInt(cidr?.split('/')[1] ?? '32', 10);
+  if (isNaN(prefix)) return 0;
+  if (prefix >= 31) return Math.pow(2, 32 - prefix);
+  return Math.pow(2, 32 - prefix) - 2;
+};
 
 export default function Subnets() {
   const [blocks, setBlocks] = useState<any[]>([]);
@@ -47,25 +54,47 @@ export default function Subnets() {
   const [ipDepartment, setIpDepartment] = useState('');
   const [ipDeviceId, setIpDeviceId] = useState('');
   const [ipIsGateway, setIpIsGateway] = useState(false);
+
+  // Task 6.6: search, expand/collapse, IP counts, inline release
+  const [searchTerm, setSearchTerm] = useState('');
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
+  const [expandedSubnetIds, setExpandedSubnetIds] = useState<Set<string>>(new Set());
+  const [subnetIpData, setSubnetIpData] = useState<Record<string, { ips: any[]; loading: boolean }>>({});
+  const [ipCounts, setIpCounts] = useState<Record<string, number>>({});
   
   const loadTopology = async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
     try {
-      const [bRes, sRes, cRes, domRes, vlanRes, siteRes, devRes] = await Promise.all([
+      const [bRes, sRes, cRes, domRes, vlanRes, siteRes, devRes, ipRes] = await Promise.all([
         axios.get('/api/ipam/blocks'),
         axios.get('/api/ipam/subnets'),
         axios.get('/api/config/'),
         axios.get('/api/ipam/domains').catch(() => ({ data: [] })),
         axios.get('/api/ipam/vlans').catch(() => ({ data: [] })),
         axios.get('/api/ipam/sites').catch(() => ({ data: [] })),
-        axios.get('/api/ipam/devices').catch(() => ({ data: [] }))
+        axios.get('/api/ipam/devices').catch(() => ({ data: [] })),
+        axios.get('/api/ipam/ips').catch(() => ({ data: [] }))
       ]);
-      setBlocks(bRes.data?.items ?? []);
+      const fetchedBlocks = bRes.data?.items ?? [];
+      setBlocks(fetchedBlocks);
       setSubnets(sRes.data?.items ?? []);
       setDomains(domRes.data?.items ?? []);
       setVlans(vlanRes.data?.items ?? []);
       setSites(siteRes.data?.items ?? []);
       setDevices(devRes.data?.items ?? []);
+
+      // Initialize all blocks as expanded
+      setExpandedBlocks(new Set(fetchedBlocks.map((b: any) => b.id)));
+
+      // Compute IP counts per subnet
+      const ips: any[] = ipRes.data?.items ?? ipRes.data ?? [];
+      const counts: Record<string, number> = {};
+      ips.forEach((ip: any) => {
+        if (ip.subnet_id && ip.status === 'ALLOCATED') {
+          counts[ip.subnet_id] = (counts[ip.subnet_id] ?? 0) + 1;
+        }
+      });
+      setIpCounts(counts);
 
       const conf = cRes.data.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
       if (conf.org_structure) {
@@ -77,6 +106,50 @@ export default function Subnets() {
       setLoading(false);
     }
   };
+
+  const toggleBlock = (id: string) =>
+    setExpandedBlocks(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const toggleSubnetIps = async (subnetId: string) => {
+    setExpandedSubnetIds(prev => {
+      const n = new Set(prev);
+      if (n.has(subnetId)) { n.delete(subnetId); return n; }
+      n.add(subnetId);
+      return n;
+    });
+    if (!subnetIpData[subnetId]) {
+      setSubnetIpData(prev => ({ ...prev, [subnetId]: { ips: [], loading: true } }));
+      try {
+        const res = await axios.get(`/api/ipam/ips?subnetId=${subnetId}`);
+        const ips = res.data?.items ?? res.data ?? [];
+        setSubnetIpData(prev => ({ ...prev, [subnetId]: { ips, loading: false } }));
+      } catch {
+        setSubnetIpData(prev => ({ ...prev, [subnetId]: { ips: [], loading: false } }));
+      }
+    }
+  };
+
+  const handleReleaseIp = async (ipId: string, subnetId: string) => {
+    if (!window.confirm('Release this IP address?')) return;
+    try {
+      await axios.put(`/api/ipam/ips/${ipId}/release`);
+      setIpCounts(prev => ({ ...prev, [subnetId]: Math.max(0, (prev[subnetId] ?? 1) - 1) }));
+      setSubnetIpData(prev => ({
+        ...prev,
+        [subnetId]: { ...prev[subnetId], ips: prev[subnetId]?.ips.filter(ip => ip.id !== ipId) ?? [] }
+      }));
+    } catch {
+      alert('Failed to release IP');
+    }
+  };
+
+  const matchesTerm = (v: string) => !searchTerm || (v ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+  const blockVisible = (b: any) =>
+    !searchTerm ||
+    matchesTerm(b.name) ||
+    matchesTerm(b.cidr) ||
+    subnets.some(s => s.block_id === b.id && (matchesTerm(s.name) || matchesTerm(s.cidr)));
+  const subnetVisible = (s: any) => !searchTerm || matchesTerm(s.name) || matchesTerm(s.cidr);
 
   useEffect(() => {
     loadTopology(true);
@@ -190,57 +263,113 @@ export default function Subnets() {
   };
 
   const renderSubnetRecursive = (blockId: string, parentNodeId: string | null, depth: number, isLastChildArr: boolean[]) => {
-    const children = subnets.filter(s => s.block_id === blockId && (s.parent_subnet_id === parentNodeId || (!s.parent_subnet_id && parentNodeId === null)));
-    
-    return children.sort((a,b) => a.name.localeCompare(b.name)).map((s, index) => {
+    const children = subnets.filter(
+      s => s.block_id === blockId &&
+      (s.parent_subnet_id === parentNodeId || (!s.parent_subnet_id && parentNodeId === null)) &&
+      subnetVisible(s)
+    );
+
+    return children.sort((a, b) => a.name.localeCompare(b.name)).flatMap((s, index) => {
        const isLastChild = index === children.length - 1;
        const nextLevelLastChildArr = [...isLastChildArr, isLastChild];
+       const capacity = subnetCapacity(s.cidr);
+       const allocated = ipCounts[s.id] ?? 0;
+       const utilPct = capacity > 0 ? Math.round((allocated / capacity) * 100) : 0;
+       const utilColor =
+         utilPct >= 80 ? 'text-red-400' :
+         utilPct >= 60 ? 'text-amber-400' : 'text-emerald-400';
 
-       const statusClass = s.status === 'AVAILABLE' 
-          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+       const statusClass = s.status === 'AVAILABLE'
+          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
           : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-       
-       const prefixParts = [];
-       for (let i = 0; i < depth; i++) {
-          if (isLastChildArr[i]) {
-             prefixParts.push(<span key={i} className="text-transparent inline-block w-6 font-mono font-bold">│</span>);
-          } else {
-             prefixParts.push(<span key={i} className="text-slate-700 inline-block w-6 font-mono font-bold">│</span>);
-          }
-       }
-       if (depth >= 0) {
-           prefixParts.push(
-              <span key="branch" className="text-slate-600 inline-block w-6 font-mono font-bold">
-                 {isLastChild ? '└─' : '├─'}
-              </span>
-           );
-       }
 
-       const renderList = [
+       const prefixParts: React.ReactNode[] = [];
+       for (let i = 0; i < depth; i++) {
+          prefixParts.push(
+            <span key={i} className={`inline-block w-5 font-mono font-bold ${isLastChildArr[i] ? 'text-transparent' : 'text-slate-700'}`}>│</span>
+          );
+       }
+       prefixParts.push(
+         <span key="branch" className="text-slate-600 inline-block w-5 font-mono font-bold">
+           {isLastChild ? '└─' : '├─'}
+         </span>
+       );
+
+       const isIpsExpanded = expandedSubnetIds.has(s.id);
+       const ipData = subnetIpData[s.id];
+
+       const rows: React.ReactNode[] = [
          <tr key={s.id} className="hover:bg-slate-800/60 transition-colors">
-               <td className="px-6 py-3 flex items-center font-mono text-[13px] pl-10 whitespace-pre">
-                  {prefixParts}
-                  <span className="text-slate-300 ml-1 font-sans font-medium truncate">{s.name}</span>
-               </td>
-               <td className="px-6 py-3 text-purple-400 font-mono text-xs">{s.cidr}</td>
-               <td className="px-6 py-3"><span className="text-slate-500 text-xs">Subnet</span></td>
-               <td className="px-6 py-3">
-                  <span className={"inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold border " + statusClass}>
-                     {s.status}
-                  </span>
-               </td>
-               <td className="px-6 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                     <button onClick={() => { setIpSubnetId(s.id); setShowIpModal(true); }} className="text-emerald-400 hover:text-emerald-300 text-[13px] font-medium transition whitespace-nowrap">Assign IP</button>
-                     <button onClick={() => window.location.href = `/planning-360/subnet/${s.id}`} className="text-indigo-400 hover:text-indigo-300 text-[13px] font-medium transition whitespace-nowrap">360 View</button>
-                     <button onClick={() => handleDeleteSubnet(s.id, s.name)} className="text-red-500 hover:text-red-400 p-0.5 opacity-50 hover:opacity-100 transition"><Trash2 className="w-3.5 h-3.5" /></button>
-                  </div>
-               </td>
+           <td className="px-4 py-3 flex items-center font-mono text-[13px] pl-6 whitespace-pre">
+             {prefixParts}
+             <button
+               onClick={() => toggleSubnetIps(s.id)}
+               className="p-0.5 ml-1 text-slate-600 hover:text-slate-400 transition-colors shrink-0"
+               title={isIpsExpanded ? 'Hide IPs' : 'Show IPs'}
+             >
+               {isIpsExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRightIcon className="w-3.5 h-3.5" />}
+             </button>
+             <span className="text-slate-300 ml-1 font-sans font-medium truncate">{s.name}</span>
+           </td>
+           <td className="px-6 py-3 text-purple-400 font-mono text-xs">{s.cidr}</td>
+           <td className="px-6 py-3">
+             <span className={`font-mono text-xs font-semibold ${utilColor}`}>
+               {allocated} / {capacity > 0 ? capacity.toLocaleString() : '—'}
+               {capacity > 0 && <span className="text-slate-500 ml-1">({utilPct}%)</span>}
+             </span>
+           </td>
+           <td className="px-6 py-3">
+             <span className={"inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold border " + statusClass}>
+               {s.status}
+             </span>
+           </td>
+           <td className="px-6 py-3 text-right">
+             <div className="flex items-center justify-end gap-3">
+               <button onClick={() => { setIpSubnetId(s.id); setShowIpModal(true); }} className="text-emerald-400 hover:text-emerald-300 text-[13px] font-medium transition whitespace-nowrap">Assign IP</button>
+               <button onClick={() => window.location.href = `/planning-360/subnet/${s.id}`} className="text-indigo-400 hover:text-indigo-300 text-[13px] font-medium transition whitespace-nowrap">360 View</button>
+               <button onClick={() => handleDeleteSubnet(s.id, s.name)} className="text-red-500 hover:text-red-400 p-0.5 opacity-50 hover:opacity-100 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+             </div>
+           </td>
          </tr>
        ];
-       
+
+       // Inline IP list
+       if (isIpsExpanded) {
+         rows.push(
+           <tr key={`ips-${s.id}`} className="bg-black/30">
+             <td colSpan={5} className="px-12 py-3">
+               {ipData?.loading && (
+                 <div className="text-xs text-slate-500 animate-pulse py-2">Loading IPs…</div>
+               )}
+               {ipData && !ipData.loading && ipData.ips.length === 0 && (
+                 <div className="text-xs text-slate-600 py-2">No allocated IPs in this subnet.</div>
+               )}
+               {ipData && !ipData.loading && ipData.ips.length > 0 && (
+                 <div className="flex flex-wrap gap-2 py-1">
+                   {ipData.ips.filter((ip: any) => ip.status === 'ALLOCATED').map((ip: any) => (
+                     <div key={ip.id} className="flex items-center gap-2 bg-slate-800/80 border border-white/5 rounded-lg px-3 py-1.5 text-xs group/ip">
+                       <span className="font-mono text-emerald-400">{ip.ip_address}</span>
+                       {ip.metadata?.nodeDetails && (
+                         <span className="text-slate-400 max-w-[120px] truncate">{ip.metadata.nodeDetails}</span>
+                       )}
+                       <button
+                         onClick={() => handleReleaseIp(ip.id, s.id)}
+                         className="text-red-500/50 hover:text-red-400 transition-colors ml-1 opacity-0 group-hover/ip:opacity-100"
+                         title="Release IP"
+                       >
+                         <X className="w-3 h-3" />
+                       </button>
+                     </div>
+                   ))}
+                 </div>
+               )}
+             </td>
+           </tr>
+         );
+       }
+
        const subChildren = renderSubnetRecursive(blockId, s.id, depth + 1, nextLevelLastChildArr);
-       return [...renderList, ...subChildren];
+       return [...rows, ...subChildren];
     });
   };
 
@@ -268,7 +397,18 @@ export default function Subnets() {
       <div className="flex gap-4">
          <div className="flex-1 bg-slate-950 border border-slate-800 rounded-lg flex items-center px-4 py-2 text-slate-400 focus-within:border-indigo-500 focus-within:text-indigo-400 transition-colors">
             <Search className="w-5 h-5 mr-3" />
-            <input type="text" placeholder="Search by name, CIDR, or tag..." className="bg-transparent border-none outline-none w-full text-slate-200 placeholder-slate-600 text-sm" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search by name or CIDR..."
+              className="bg-transparent border-none outline-none w-full text-slate-200 placeholder-slate-600 text-sm"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="ml-2 text-slate-500 hover:text-slate-300 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            )}
          </div>
       </div>
 
@@ -278,18 +418,27 @@ export default function Subnets() {
                <tr>
                   <th className="px-8 py-5 font-bold tracking-widest text-[11px] uppercase text-slate-400">Name / Context</th>
                   <th className="px-8 py-5 font-bold tracking-widest text-[11px] uppercase text-slate-400">CIDR Range</th>
-                  <th className="px-8 py-5 font-bold tracking-widest text-[11px] uppercase text-slate-400">Type</th>
+                  <th className="px-8 py-5 font-bold tracking-widest text-[11px] uppercase text-slate-400">IP Usage</th>
                   <th className="px-8 py-5 font-bold tracking-widest text-[11px] uppercase text-slate-400">Status</th>
                   <th className="px-8 py-5 font-bold tracking-widest text-[11px] uppercase text-slate-400 text-right">Actions</th>
                </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
                {loading && <tr><td colSpan={5} className="p-0"><SkeletonTable rows={6} cols={5} /></td></tr>}
-               {!loading && blocks.map((b: any) => (
+               {!loading && blocks.filter(blockVisible).map((b: any) => (
                   <React.Fragment key={'frag-'+b.id}>
                      <tr key={b.id} className="hover:bg-white/5 transition-colors bg-black/20 border-b border-t border-white/5">
-                        <td className="px-8 py-4 flex items-center gap-3">
-                           <FolderTree className="w-5 h-5 text-indigo-400" />
+                        <td className="px-4 py-4 flex items-center gap-2">
+                           <button
+                             onClick={() => toggleBlock(b.id)}
+                             className="p-1 rounded text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+                             title={expandedBlocks.has(b.id) ? 'Collapse block' : 'Expand block'}
+                           >
+                             {expandedBlocks.has(b.id)
+                               ? <ChevronDown className="w-4 h-4" />
+                               : <ChevronRightIcon className="w-4 h-4" />}
+                           </button>
+                           <FolderTree className="w-5 h-5 text-indigo-400 shrink-0" />
                            <span className="font-bold text-white tracking-wide text-[15px]">{b.cidr}</span>
                            <span className="text-slate-400 text-[14px] ml-1">- {b.name}</span>
                         </td>
@@ -308,7 +457,7 @@ export default function Subnets() {
                            </div>
                         </td>
                      </tr>
-                     {renderSubnetRecursive(b.id, null, 0, [])}
+                     {expandedBlocks.has(b.id) && renderSubnetRecursive(b.id, null, 0, [])}
                   </React.Fragment>
                ))}
                
