@@ -153,11 +153,9 @@ INSERT INTO roles (id, name) VALUES
     ('00000000-0000-0000-0000-000000000002', 'USER')
 ON CONFLICT (name) DO NOTHING;
 
--- Seed admin user.
--- BL4: password_hash is plain-text 'admin123'. Phase 2 (Task 2.1) replaces this
--- with a real bcrypt hash and re-seeds via docker compose down -v.
+-- Seed admin user — bcrypt hash of 'admin123' (cost 10). Task 2.1.
 INSERT INTO users (id, email, password_hash, status) VALUES
-    ('00000000-0000-0000-0000-000000000010', 'admin@ipam.local', 'admin123', 'ACTIVE')
+    ('00000000-0000-0000-0000-000000000010', 'admin@ipam.local', '$2b$10$CZEORzHagfXQd48NfyHJ1.5wpI/CJEQoEr6e7cro9bdRlQzo5BPGe', 'ACTIVE')
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO user_roles (user_id, role_id) VALUES

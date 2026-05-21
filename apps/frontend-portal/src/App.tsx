@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Network, Settings, History, UserCircle, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Network, Settings, History, UserCircle, ShieldAlert, LogOut } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Subnets from './pages/Subnets';
 import Approvals from './pages/Approvals';
@@ -10,14 +10,18 @@ import Planning360Search from './pages/Planning360Search';
 import NetworkAssets from './pages/NetworkAssets';
 import Discovery from './pages/Discovery';
 import AuditLogs from './pages/AuditLogs';
+import Login from './pages/Login';
 import { Activity, Server, SearchCode } from 'lucide-react';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [appTitle, setAppTitle] = React.useState('Antigravity IPAM');
   const [appLogo, setAppLogo] = React.useState('');
 
   React.useEffect(() => {
+    if (!user) return;
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
@@ -26,7 +30,11 @@ function App() {
         if (configMap.app_logo) setAppLogo(configMap.app_logo);
       })
       .catch(console.error);
-  }, []);
+  }, [user]);
+
+  if (!user) {
+    return <Login />;
+  }
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -70,8 +78,8 @@ function App() {
                 key={item.path}
                 to={item.path}
                 className={`group flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/5 text-indigo-300 border border-indigo-500/20 shadow-[inset_0_0_20px_rgba(99,102,241,0.05)]' 
+                  isActive
+                    ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/5 text-indigo-300 border border-indigo-500/20 shadow-[inset_0_0_20px_rgba(99,102,241,0.05)]'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent hover:shadow-lg'
                 }`}
               >
@@ -85,14 +93,21 @@ function App() {
         </nav>
 
         <div className="p-6 border-t border-white/5">
-          <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group shadow-lg">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 group-hover:scale-110 transition-transform duration-300">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 shadow-lg">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 shrink-0">
                <UserCircle className="w-6 h-6 text-indigo-400" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-white tracking-wide">Admin User</span>
-              <span className="text-xs text-slate-400">admin@ipam.local</span>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-sm font-semibold text-white tracking-wide truncate">{user.roles.includes('ADMIN') ? 'Admin' : 'User'}</span>
+              <span className="text-xs text-slate-400 truncate">{user.email}</span>
             </div>
+            <button
+              onClick={logout}
+              title="Sign out"
+              className="p-2 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors duration-200 shrink-0"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -110,7 +125,7 @@ function App() {
              </div>
           </div>
         </header>
-        
+
         <div className="flex-1 overflow-auto p-10 scroll-smooth">
           <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Routes>
