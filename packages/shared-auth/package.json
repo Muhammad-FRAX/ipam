@@ -2,8 +2,11 @@
   "name": "@ipam/shared-auth",
   "version": "1.0.0",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3"
+  },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.0",
     "typescript": "^5.0.0"
   }
 }

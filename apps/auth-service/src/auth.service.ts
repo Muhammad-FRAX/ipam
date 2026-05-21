@@ -1,6 +1,20 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { signJwt } from '@ipam/shared-auth';
+
+const DEV_SECRET = 'ipam-dev-secret-change-in-production';
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET env var is required in production');
+    }
+    return DEV_SECRET;
+  }
+  return secret;
+}
 
 @Injectable()
 export class AuthService {
@@ -36,11 +50,17 @@ export class AuthService {
       [user.id],
     );
 
+    const roleNames = roles.map((r: any) => r.name);
+    const accessToken = signJwt(
+      { sub: user.id, email: user.email, roles: roleNames },
+      getJwtSecret(),
+    );
+
     return {
       userId: user.id,
       email: user.email,
-      roles: roles.map((r: any) => r.name),
-      token: null, // replaced with real JWT in Task 2.2
+      roles: roleNames,
+      accessToken,
     };
   }
 

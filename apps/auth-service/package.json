@@ -18,7 +18,8 @@
     "rxjs": "^7.8.1",
     "@ipam/shared-types": "1.0.0",
     "@ipam/shared-config": "1.0.0",
-    "@ipam/shared-logging": "1.0.0"
+    "@ipam/shared-logging": "1.0.0",
+    "@ipam/shared-auth": "1.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
