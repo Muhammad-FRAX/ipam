@@ -1,6 +1,15 @@
 import { Controller, Get, Post, Body, Param, Put, Req, Query } from '@nestjs/common';
 import { IpamService } from './ipam.service';
 
+function isAdminUser(req: any): boolean {
+  try {
+    const roles: string[] = JSON.parse(req.headers['x-user-roles'] || '[]');
+    return roles.includes('ADMIN');
+  } catch {
+    return false;
+  }
+}
+
 @Controller('ipam')
 export class IpamController {
   constructor(private readonly service: IpamService) {}
@@ -17,8 +26,10 @@ export class IpamController {
   }
 
   @Get('blocks')
-  async getBlocks(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.service.getBlocks(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50);
+  async getBlocks(@Query('page') page?: string, @Query('pageSize') pageSize?: string, @Req() req?: any) {
+    const userId: string | null = req?.headers['x-user-id'] || null;
+    const admin = isAdminUser(req);
+    return this.service.getBlocks(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50, userId, admin);
   }
 
   @Post('subnets')
@@ -32,8 +43,10 @@ export class IpamController {
   }
 
   @Get('subnets')
-  async getSubnets(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.service.getSubnets(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50);
+  async getSubnets(@Query('page') page?: string, @Query('pageSize') pageSize?: string, @Req() req?: any) {
+    const userId: string | null = req?.headers['x-user-id'] || null;
+    const admin = isAdminUser(req);
+    return this.service.getSubnets(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 50, userId, admin);
   }
 
   @Get('domains')
