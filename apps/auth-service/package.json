@@ -11,16 +11,17 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@ipam/shared-audit": "1.0.0",
+    "@ipam/shared-auth": "1.0.0",
+    "@ipam/shared-config": "1.0.0",
+    "@ipam/shared-logging": "1.0.0",
+    "@ipam/shared-types": "1.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "@ipam/shared-types": "1.0.0",
-    "@ipam/shared-config": "1.0.0",
-    "@ipam/shared-logging": "1.0.0",
-    "@ipam/shared-auth": "1.0.0",
-    "@ipam/shared-audit": "1.0.0"
+    "typeorm": "^1.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
