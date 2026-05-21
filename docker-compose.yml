@@ -51,7 +51,6 @@ services:
     depends_on:
       - auth-service
       - ipam-core-service
-      - validation-engine-service
       - request-workflow-service
       - forecasting-insight-service
       - audit-service
@@ -87,26 +86,6 @@ services:
       - "3002:3002"
     environment:
       PORT: 3002
-      DB_HOST: postgres
-      DB_USER: ipam_user
-      DB_PASSWORD: ipam_password
-      DB_NAME: ipam_db
-    networks:
-      - ipam_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  validation-engine-service:
-    build:
-      context: .
-      args:
-        SERVICE_NAME: validation-engine-service
-    container_name: validation-engine-service
-    ports:
-      - "3003:3003"
-    environment:
-      PORT: 3003
       DB_HOST: postgres
       DB_USER: ipam_user
       DB_PASSWORD: ipam_password

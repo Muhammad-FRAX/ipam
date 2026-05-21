@@ -12,7 +12,6 @@ export class AppModule {
     const services = {
       '/api/auth': 'http://auth-service:3001/auth',
       '/api/ipam': 'http://ipam-core-service:3002/ipam',
-      '/api/validation': 'http://validation-engine-service:3003/validation',
       '/api/workflow': 'http://request-workflow-service:3008/workflow',
       '/api/insight': 'http://forecasting-insight-service:3005/insight',
       '/api/audit': 'http://audit-service:3006/audit',
