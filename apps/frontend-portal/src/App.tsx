@@ -1,22 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Network, Settings, History, UserCircle, ShieldAlert,
   LogOut, PlusCircle, Activity, Server, SearchCode, Menu, X, ChevronLeft,
   ChevronRight, User2, ChevronUp
 } from 'lucide-react';
-import Dashboard from './pages/Dashboard';
-import Subnets from './pages/Subnets';
-import Approvals from './pages/Approvals';
-import Config from './pages/Config';
-import Planning360 from './pages/Planning360';
-import Planning360Search from './pages/Planning360Search';
-import NetworkAssets from './pages/NetworkAssets';
-import Discovery from './pages/Discovery';
-import AuditLogs from './pages/AuditLogs';
 import Login from './pages/Login';
-import NewRequest from './pages/NewRequest';
 import { useAuth } from './hooks/useAuth';
+
+const Dashboard     = lazy(() => import('./pages/Dashboard'));
+const Subnets       = lazy(() => import('./pages/Subnets'));
+const Approvals     = lazy(() => import('./pages/Approvals'));
+const Config        = lazy(() => import('./pages/Config'));
+const Planning360   = lazy(() => import('./pages/Planning360'));
+const Planning360Search = lazy(() => import('./pages/Planning360Search'));
+const NetworkAssets = lazy(() => import('./pages/NetworkAssets'));
+const Discovery     = lazy(() => import('./pages/Discovery'));
+const AuditLogs     = lazy(() => import('./pages/AuditLogs'));
+const NewRequest    = lazy(() => import('./pages/NewRequest'));
+
+function PageFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center gap-4 text-slate-500">
+        <div className="w-8 h-8 border-2 border-indigo-500/40 border-t-indigo-500 rounded-full animate-spin" />
+        <span className="text-sm">Loading page…</span>
+      </div>
+    </div>
+  );
+}
 
 const navGroups = [
   {
@@ -331,18 +343,20 @@ function App() {
 
         <div className="flex-1 overflow-auto p-6 md:p-10">
           <div key={location.pathname} className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/resources" element={<NetworkAssets />} />
-              <Route path="/topology" element={<Subnets />} />
-              <Route path="/discovery" element={<Discovery />} />
-              <Route path="/approvals" element={<Approvals />} />
-              <Route path="/audit" element={<AuditLogs />} />
-              <Route path="/config" element={<Config />} />
-              <Route path="/planning-360" element={<Planning360Search />} />
-              <Route path="/planning-360/:type/:id" element={<Planning360 />} />
-              <Route path="/requests/new" element={<NewRequest />} />
-            </Routes>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/resources" element={<NetworkAssets />} />
+                <Route path="/topology" element={<Subnets />} />
+                <Route path="/discovery" element={<Discovery />} />
+                <Route path="/approvals" element={<Approvals />} />
+                <Route path="/audit" element={<AuditLogs />} />
+                <Route path="/config" element={<Config />} />
+                <Route path="/planning-360" element={<Planning360Search />} />
+                <Route path="/planning-360/:type/:id" element={<Planning360 />} />
+                <Route path="/requests/new" element={<NewRequest />} />
+              </Routes>
+            </Suspense>
           </div>
         </div>
       </main>
