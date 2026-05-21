@@ -23,16 +23,7 @@ export default function Config() {
         if (configMap.exhaustion_warning_pct) setExhaustionWarningPct(configMap.exhaustion_warning_pct);
         if (configMap.risk_pool_min_allocations) setRiskPoolMinAllocations(configMap.risk_pool_min_allocations);
         if (configMap.org_structure) {
-            try {
-               let parsed = configMap.org_structure;
-               for (let i = 0; i < 3 && typeof parsed === 'string'; i++) {
-                  parsed = JSON.parse(parsed);
-               }
-               setOrgStructure(Array.isArray(parsed) ? parsed : []);
-            } catch(e) {
-               console.error('Failed to parse org_structure:', e);
-               setOrgStructure([]);
-            }
+            setOrgStructure(Array.isArray(configMap.org_structure) ? configMap.org_structure : []);
         }
       } catch (err) {
         console.error(err);

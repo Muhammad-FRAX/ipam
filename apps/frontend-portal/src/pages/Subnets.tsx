@@ -66,16 +66,7 @@ export default function Subnets() {
 
       const conf = cRes.data.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
       if (conf.org_structure) {
-          try {
-             let parsed = conf.org_structure;
-             for (let i = 0; i < 3 && typeof parsed === 'string'; i++) {
-                parsed = JSON.parse(parsed);
-             }
-             setOrgStructure(Array.isArray(parsed) ? parsed : []);
-          } catch(e) {
-             console.error('Failed to parse org_structure:', e, conf.org_structure);
-             setOrgStructure([]);
-          }
+          setOrgStructure(Array.isArray(conf.org_structure) ? conf.org_structure : []);
       }
     } catch (err) {
       console.error(err);
