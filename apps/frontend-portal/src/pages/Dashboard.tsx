@@ -56,7 +56,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-[#12121a]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl shadow-black/50 hover:border-white/10 transition-all duration-300 group">
-          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-8 tracking-wide">Allocation Forecast & Trend</h2>
+          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-8 tracking-wide">Allocation Trend (Last 12 Months)</h2>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={actualHistory} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
