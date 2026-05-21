@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.enableCors({ origin: process.env.CORS_ORIGIN || true, credentials: true });
-  const port = process.env.PORT || Math.floor(Math.random() * 1000 + 3000);
+  const port = Number(process.env.PORT) || (() => { throw new Error('PORT env var is required'); })();
   await app.listen(port, '0.0.0.0');
   logger.info('Application listening on port ' + port);
 }
