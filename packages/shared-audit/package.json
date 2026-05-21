@@ -1,0 +1,8 @@
+{
+  "name": "@ipam/shared-audit",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Network, Settings, History, UserCircle, ShieldAlert, LogOut } from 'lucide-react';
+import { LayoutDashboard, Network, Settings, History, UserCircle, ShieldAlert, LogOut, PlusCircle } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Subnets from './pages/Subnets';
 import Approvals from './pages/Approvals';
@@ -11,6 +11,7 @@ import NetworkAssets from './pages/NetworkAssets';
 import Discovery from './pages/Discovery';
 import AuditLogs from './pages/AuditLogs';
 import Login from './pages/Login';
+import NewRequest from './pages/NewRequest';
 import { Activity, Server, SearchCode } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 
@@ -42,6 +43,7 @@ function App() {
     { name: 'IP Topology', path: '/topology', icon: Network },
     { name: 'Subnet Discovery', path: '/discovery', icon: SearchCode },
     { name: 'Approvals', path: '/approvals', icon: ShieldAlert },
+    { name: 'New Request', path: '/requests/new', icon: PlusCircle },
     { name: 'Planning 360', path: '/planning-360', icon: Activity },
     { name: 'Audit Log', path: '/audit', icon: History },
     { name: 'Configuration', path: '/config', icon: Settings },
@@ -138,6 +140,7 @@ function App() {
               <Route path="/config" element={<Config />} />
               <Route path="/planning-360" element={<Planning360Search />} />
               <Route path="/planning-360/:type/:id" element={<Planning360 />} />
+              <Route path="/requests/new" element={<NewRequest />} />
             </Routes>
           </div>
         </div>

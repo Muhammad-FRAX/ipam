@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { signJwt } from '@ipam/shared-auth';
+import { logAudit } from '@ipam/shared-audit';
 
 const DEV_SECRET = 'ipam-dev-secret-change-in-production';
 
@@ -36,12 +37,26 @@ export class AuthService {
     );
 
     if (!users.length) {
+      await logAudit(this.dataSource, {
+        action: 'LOGIN_FAILURE',
+        entity: 'users',
+        entityId: null,
+        userId: null,
+        details: { email, reason: 'user not found' },
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const user = users[0];
     const passwordValid = await bcrypt.compare(password, user.password_hash);
     if (!passwordValid) {
+      await logAudit(this.dataSource, {
+        action: 'LOGIN_FAILURE',
+        entity: 'users',
+        entityId: user.id,
+        userId: user.id,
+        details: { email, reason: 'wrong password' },
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -55,6 +70,14 @@ export class AuthService {
       { sub: user.id, email: user.email, roles: roleNames },
       getJwtSecret(),
     );
+
+    await logAudit(this.dataSource, {
+      action: 'LOGIN_SUCCESS',
+      entity: 'users',
+      entityId: user.id,
+      userId: user.id,
+      details: { email },
+    });
 
     return {
       userId: user.id,
