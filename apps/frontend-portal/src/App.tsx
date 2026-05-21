@@ -330,7 +330,7 @@ function App() {
         </header>
 
         <div className="flex-1 overflow-auto p-6 md:p-10">
-          <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div key={location.pathname} className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/resources" element={<NetworkAssets />} />
