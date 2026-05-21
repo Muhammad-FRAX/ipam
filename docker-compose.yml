@@ -47,6 +47,12 @@ services:
     environment:
       PORT: 3004
       CORS_ORIGIN: "https://localhost"
+      AUTH_SERVICE_URL: "http://auth-service:3001/auth"
+      IPAM_CORE_SERVICE_URL: "http://ipam-core-service:3002/ipam"
+      WORKFLOW_SERVICE_URL: "http://request-workflow-service:3008/workflow"
+      INSIGHT_SERVICE_URL: "http://forecasting-insight-service:3005/insight"
+      AUDIT_SERVICE_URL: "http://audit-service:3006/audit"
+      CONFIG_SERVICE_URL: "http://configuration-service:3007/config"
     networks:
       - ipam_network
     depends_on:
