@@ -31,6 +31,9 @@ ARG SERVICE_NAME
 # We need the root node_modules for hoisted dependencies
 COPY --from=base /usr/src/app/node_modules ./node_modules
 
+# Overlay per-workspace node_modules (packages npm could not hoist, e.g. @nestjs/platform-express)
+COPY --from=base /usr/src/app/apps/${SERVICE_NAME}/node_modules ./node_modules
+
 # We need the built shared packages
 COPY --from=base /usr/src/app/packages ./packages
 

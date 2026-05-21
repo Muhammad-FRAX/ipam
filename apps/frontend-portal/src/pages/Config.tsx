@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Save, Plus, Trash2 } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 export default function Config() {
+  const toast = useToast();
   const [appTitle, setAppTitle] = useState('Antigravity IPAM');
   const [appLogo, setAppLogo] = useState('');
   const [highUtil, setHighUtil] = useState(80);
@@ -41,11 +43,11 @@ export default function Config() {
       await axios.put('/api/config/exhaustion_warning_pct', { value: exhaustionWarningPct });
       await axios.put('/api/config/risk_pool_min_allocations', { value: riskPoolMinAllocations });
       await axios.put('/api/config/org_structure', { value: orgStructure });
-      alert('Settings saved successfully!');
-      window.location.reload();
+      toast.success('Settings saved');
+      setTimeout(() => window.location.reload(), 900);
     } catch (err) {
       console.error(err);
-      alert('Failed to save settings.');
+      toast.error('Failed to save settings');
     }
   };
 

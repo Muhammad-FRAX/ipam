@@ -3,8 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Activity, BarChart, Download, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { useToast } from '../components/Toast';
+import { downloadFromApi } from '../lib/download';
 
 export default function Planning360() {
+  const toast = useToast();
   const { type, id } = useParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -23,8 +26,16 @@ export default function Planning360() {
     fetchData();
   }, [type, id]);
 
-  const handleExport = (format: string) => {
-    window.open(`/api/insight/export/${type}?format=${format}&id=${id}`, '_blank');
+  const handleExport = async (format: string) => {
+    try {
+      await downloadFromApi(
+        `/api/insight/export/${type}?format=${format}&id=${id}`,
+        `${type}-${id}`,
+        format
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.status === 401 ? 'Session expired. Please sign in again.' : 'Export failed');
+    }
   };
 
   if (loading) return <div className="text-white p-8">Building 360 Context...</div>;

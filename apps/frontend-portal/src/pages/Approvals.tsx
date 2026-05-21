@@ -3,8 +3,11 @@ import axios from 'axios';
 import { CheckCircle2, XCircle, AlertTriangle, PlusCircle, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonCard } from '../components/Skeleton';
+import { useToast } from '../components/Toast';
+import { downloadFromApi } from '../lib/download';
 
 export default function Approvals() {
+  const toast = useToast();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -29,12 +32,20 @@ export default function Approvals() {
       await axios.put('/api/workflow/requests/' + id + '/' + action);
       loadRequests();
     } catch (err) {
-      alert('Failed to ' + action + ' request');
+      toast.error(`Failed to ${action} request`);
     }
   };
 
-  const handleExport = () => {
-    window.open(`/api/insight/export/request?format=csv&id=all`, '_blank');
+  const handleExport = async () => {
+    try {
+      await downloadFromApi(
+        `/api/insight/export/request?format=csv&id=all`,
+        'requests',
+        'csv'
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.status === 401 ? 'Session expired. Please sign in again.' : 'Export failed');
+    }
   };
 
   const getStatusStyle = (status: string) => {

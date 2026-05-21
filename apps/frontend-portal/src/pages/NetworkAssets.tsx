@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Plus, Building2, Share2, Server, Router, Network, X } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 export default function NetworkAssets() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'sites' | 'domains' | 'vlans' | 'devices'>('sites');
 
   const [sites, setSites] = useState<any[]>([]);
@@ -50,8 +52,9 @@ export default function NetworkAssets() {
       setShowModal(false);
       setFormData({});
       loadData();
-    } catch (e) {
-      alert('Failed to create resource.');
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || 'Failed to create resource';
+      toast.error(msg);
     }
   };
 

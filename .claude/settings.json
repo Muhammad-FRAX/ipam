@@ -13,7 +13,9 @@
       "Bash(git push *)",
       "Bash(gh auth *)",
       "Bash(npm *)",
-      "Bash(*)"
+      "Bash(*)",
+      "Skill(impeccable:impeccable)",
+      "Skill(impeccable:impeccable:*)"
     ]
   }
 }

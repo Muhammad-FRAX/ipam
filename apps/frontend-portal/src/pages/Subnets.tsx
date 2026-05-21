@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Plus, Search, FolderTree, X, Download, Trash2, AlertCircle, Network, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { SkeletonTable } from '../components/Skeleton';
+import { useToast } from '../components/Toast';
+import { useConfirm } from '../components/ConfirmDialog';
+import { downloadFromApi } from '../lib/download';
 
 const subnetCapacity = (cidr: string): number => {
   const prefix = parseInt(cidr?.split('/')[1] ?? '32', 10);
@@ -11,6 +14,8 @@ const subnetCapacity = (cidr: string): number => {
 };
 
 export default function Subnets() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [blocks, setBlocks] = useState<any[]>([]);
   const [subnets, setSubnets] = useState<any[]>([]);
   const [orgStructure, setOrgStructure] = useState<any[]>([]);
@@ -130,7 +135,13 @@ export default function Subnets() {
   };
 
   const handleReleaseIp = async (ipId: string, subnetId: string) => {
-    if (!window.confirm('Release this IP address?')) return;
+    const ok = await confirm({
+      title: 'Release IP address?',
+      message: 'This IP will be marked as available and returned to the subnet pool.',
+      confirmLabel: 'Release',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await axios.put(`/api/ipam/ips/${ipId}/release`);
       setIpCounts(prev => ({ ...prev, [subnetId]: Math.max(0, (prev[subnetId] ?? 1) - 1) }));
@@ -139,7 +150,7 @@ export default function Subnets() {
         [subnetId]: { ...prev[subnetId], ips: prev[subnetId]?.ips.filter(ip => ip.id !== ipId) ?? [] }
       }));
     } catch {
-      alert('Failed to release IP');
+      toast.error('Failed to release IP');
     }
   };
 
@@ -164,8 +175,9 @@ export default function Subnets() {
       setBlockCidr('');
       setBlockDomainId('');
       loadTopology();
-    } catch (err) {
-      alert('Failed to create block. Verify CIDR syntax.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to create block. Verify CIDR syntax.';
+      toast.error(msg);
     }
   };
 
@@ -173,7 +185,7 @@ export default function Subnets() {
     e.preventDefault();
     try {
       if (!subnetBlockId) {
-          alert('Block must be selected');
+          toast.warning('Block must be selected');
           return;
       }
       await axios.post('/api/ipam/subnets', { 
@@ -211,27 +223,46 @@ export default function Subnets() {
       setSubnetRequesterDepartment('');
       setSubnetSpoc('');
       loadTopology();
-    } catch (err) {
-      alert('Failed to allocate subnet. Verify CIDR syntax and overlap.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to allocate subnet. Verify CIDR syntax and overlap.';
+      toast.error(msg);
     }
   };
 
   const handleDeleteBlock = async (id: string, name: string) => {
-      if (window.confirm(`Are you sure you want to delete Root Block ${name}? This will cascade delete all nested subnets.`)) {
-          try {
-              await axios.post(`/api/ipam/blocks/${id}/delete`);
-              loadTopology();
-          } catch(e) { alert('Failed to delete block'); }
-      }
+      const ok = await confirm({
+        title: 'Delete root block?',
+        message: (
+          <>
+            <span className="font-mono text-rose-300">{name}</span> and all nested subnets under it will be removed. This cannot be undone.
+          </>
+        ),
+        confirmLabel: 'Delete block',
+        variant: 'danger',
+      });
+      if (!ok) return;
+      try {
+          await axios.post(`/api/ipam/blocks/${id}/delete`);
+          loadTopology();
+      } catch (e) { toast.error('Failed to delete block'); }
   };
 
   const handleDeleteSubnet = async (id: string, name: string) => {
-      if (window.confirm(`Are you sure you want to delete Subnet ${name}? This will affect all nested subnets.`)) {
-          try {
-              await axios.post(`/api/ipam/subnets/${id}/delete`);
-              loadTopology();
-          } catch(e) { alert('Failed to delete subnet'); }
-      }
+      const ok = await confirm({
+        title: 'Delete subnet?',
+        message: (
+          <>
+            <span className="font-mono text-rose-300">{name}</span> and any nested subnets under it will be removed. Allocations inside will be lost.
+          </>
+        ),
+        confirmLabel: 'Delete subnet',
+        variant: 'danger',
+      });
+      if (!ok) return;
+      try {
+          await axios.post(`/api/ipam/subnets/${id}/delete`);
+          loadTopology();
+      } catch (e) { toast.error('Failed to delete subnet'); }
   };
 
   const handleAssignIp = async (e: React.FormEvent) => {
@@ -255,10 +286,10 @@ export default function Subnets() {
         setIpDepartment('');
         setIpDeviceId('');
         setIpIsGateway(false);
-        alert('IP successfully assigned to node!');
+        toast.success('IP successfully assigned to node');
     } catch (err: any) {
         const msg = err?.response?.data?.message || 'Failed to assign IP Address.';
-        alert(msg);
+        toast.error(msg);
     }
   };
 
@@ -373,8 +404,16 @@ export default function Subnets() {
     });
   };
 
-  const handleExport = (format: string) => {
-    window.open(`/api/insight/export/full-system?format=${format}`, '_blank');
+  const handleExport = async (format: string) => {
+    try {
+      await downloadFromApi(
+        `/api/insight/export/full-system?format=${format}`,
+        'topology',
+        format
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.status === 401 ? 'Session expired. Please sign in again.' : 'Export failed');
+    }
   };
 
   return (

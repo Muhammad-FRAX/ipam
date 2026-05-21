@@ -53,6 +53,7 @@ services:
       INSIGHT_SERVICE_URL: "http://forecasting-insight-service:3005/insight"
       AUDIT_SERVICE_URL: "http://audit-service:3006/audit"
       CONFIG_SERVICE_URL: "http://configuration-service:3007/config"
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-in-production-9f3a7c2e}
     networks:
       - ipam_network
     depends_on:
@@ -77,6 +78,7 @@ services:
       DB_USER: ipam_user
       DB_PASSWORD: ipam_password
       DB_NAME: ipam_db
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-in-production-9f3a7c2e}
     networks:
       - ipam_network
     depends_on:
