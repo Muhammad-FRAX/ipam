@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { History, Search, FileText, User, Tag, Clock, ArrowRight } from 'lucide-react';
+import { History, Search, FileText, User, Tag, Clock, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
+
+const PAGE_SIZE = 50;
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchLogs = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get('/api/audit');
-        setLogs(res.data || []);
+        const res = await axios.get(`/api/audit?page=${page}&pageSize=${PAGE_SIZE}`);
+        setLogs(res.data?.items ?? []);
+        setTotal(res.data?.total ?? 0);
       } catch (err) {
         console.error(err);
       } finally {
@@ -19,14 +25,16 @@ export default function AuditLogs() {
       }
     };
     fetchLogs();
-  }, []);
+  }, [page]);
 
-  const filteredLogs = logs.filter(log => 
+  const filteredLogs = logs.filter(log =>
     (log.action && log.action.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (log.entity && log.entity.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (log.user_id && log.user_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (log.entity_id && log.entity_id.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -40,6 +48,7 @@ export default function AuditLogs() {
                Immutable record of all administrative actions, allocations, and policy changes across the platform.
             </p>
          </div>
+         <p className="text-slate-500 text-sm shrink-0">{total} total records</p>
       </div>
 
       <div className="bg-[#12121a]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
@@ -49,11 +58,11 @@ export default function AuditLogs() {
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                <Search className="h-5 w-5 text-indigo-400 group-focus-within:text-indigo-300 transition-colors" />
             </div>
-            <input 
-               type="text" 
-               placeholder="Search by Action, Entity, User ID, or Resource ID..." 
+            <input
+               type="text"
+               placeholder="Search by Action, Entity, User ID, or Resource ID..."
                value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
+               onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                className="block w-full pl-12 pr-4 py-3 bg-black/50 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
             />
          </div>
@@ -98,6 +107,28 @@ export default function AuditLogs() {
                      </div>
                   </div>
                ))}
+            </div>
+         )}
+
+         {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/5">
+               <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+               >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+               </button>
+               <span className="text-sm text-slate-400">
+                  Page {page} of {totalPages}
+               </span>
+               <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+               >
+                  Next <ChevronRight className="w-4 h-4" />
+               </button>
             </div>
          )}
       </div>

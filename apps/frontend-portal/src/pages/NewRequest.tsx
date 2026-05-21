@@ -18,7 +18,7 @@ export default function NewRequest() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    axios.get('/api/ipam/blocks').then(res => setBlocks(res.data)).catch(console.error);
+    axios.get('/api/ipam/blocks').then(res => setBlocks(res.data?.items ?? [])).catch(console.error);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

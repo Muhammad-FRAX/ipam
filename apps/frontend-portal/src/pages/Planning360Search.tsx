@@ -19,8 +19,8 @@ export default function Planning360Search() {
           axios.get('/api/ipam/subnets').catch(() => ({ data: [] })),
           axios.get('/api/insight/planning-360/global').catch(() => ({ data: null }))
         ]);
-        setBlocks(bRes.data || []);
-        setSubnets(sRes.data || []);
+        setBlocks(bRes.data?.items ?? []);
+        setSubnets(sRes.data?.items ?? []);
         setGlobalInsight(insightRes.data);
       } catch (err) {
         console.error(err);

@@ -57,12 +57,12 @@ export default function Subnets() {
         axios.get('/api/ipam/sites').catch(() => ({ data: [] })),
         axios.get('/api/ipam/devices').catch(() => ({ data: [] }))
       ]);
-      setBlocks(bRes.data);
-      setSubnets(sRes.data);
-      setDomains(domRes.data || []);
-      setVlans(vlanRes.data || []);
-      setSites(siteRes.data || []);
-      setDevices(devRes.data || []);
+      setBlocks(bRes.data?.items ?? []);
+      setSubnets(sRes.data?.items ?? []);
+      setDomains(domRes.data?.items ?? []);
+      setVlans(vlanRes.data?.items ?? []);
+      setSites(siteRes.data?.items ?? []);
+      setDevices(devRes.data?.items ?? []);
 
       const conf = cRes.data.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
       if (conf.org_structure) {

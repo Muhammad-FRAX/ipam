@@ -26,13 +26,19 @@ export class WorkflowService {
     return req;
   }
 
-  async getRequests() {
-    return this.dataSource.query(
-      `SELECT r.*, u.email as submitter_email
-       FROM allocation_requests r
-       LEFT JOIN users u ON u.id = r.submitted_by
-       ORDER BY r.created_at DESC`
-    );
+  async getRequests(page = 1, pageSize = 50) {
+    const offset = (page - 1) * pageSize;
+    const [rows, countRows] = await Promise.all([
+      this.dataSource.query(
+        `SELECT r.*, u.email as submitter_email
+         FROM allocation_requests r
+         LEFT JOIN users u ON u.id = r.submitted_by
+         ORDER BY r.created_at DESC LIMIT $1 OFFSET $2`,
+        [pageSize, offset]
+      ),
+      this.dataSource.query(`SELECT COUNT(*) FROM allocation_requests`),
+    ]);
+    return { items: rows, total: parseInt(countRows[0].count, 10), page, pageSize };
   }
 
   async approveRequest(id: string, userId?: string | null) {
