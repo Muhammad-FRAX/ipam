@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Server, Activity, Database, AlertCircle } from 'lucide-react';
+import { SkeletonCard, SkeletonChart, SkeletonText } from '../components/Skeleton';
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<any>(null);
@@ -27,7 +28,33 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full text-slate-400">Loading metrics...</div>;
+    return (
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-[#12121a]/80 border border-white/5 rounded-3xl p-8">
+            <SkeletonText className="h-6 w-64 mb-8" />
+            <SkeletonChart className="h-72 w-full" />
+          </div>
+          <div className="bg-[#12121a]/80 border border-white/5 rounded-3xl p-8">
+            <SkeletonText className="h-6 w-40 mb-8" />
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse p-4 rounded-2xl bg-white/5 space-y-3">
+                  <div className="flex justify-between">
+                    <SkeletonText className="h-4 w-24" />
+                    <SkeletonText className="h-4 w-10" />
+                  </div>
+                  <SkeletonText className="h-2 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const { totalBlocks, totalSubnets, allocatedIps, overallUtilizationPercent, historicalData } = metrics || {};

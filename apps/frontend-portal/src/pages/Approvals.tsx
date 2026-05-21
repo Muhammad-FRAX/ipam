@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { CheckCircle2, XCircle, AlertTriangle, PlusCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, PlusCircle, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SkeletonCard } from '../components/Skeleton';
 
 export default function Approvals() {
   const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const loadRequests = async () => {
@@ -13,6 +15,8 @@ export default function Approvals() {
       setRequests(res.data?.items ?? []);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,13 +69,26 @@ export default function Approvals() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {requests.length === 0 && (
-          <div className="col-span-full py-12 text-center text-slate-500 bg-slate-900 border border-slate-800 rounded-xl">
-            No requests in the queue.
+        {loading && [1, 2, 3].map((i) => <SkeletonCard key={i} className="h-48" />)}
+        {!loading && requests.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
+              <ShieldAlert className="w-10 h-10 text-blue-500/60" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-300 mb-2">No pending requests</h3>
+            <p className="text-sm text-slate-500 max-w-sm mb-6">
+              The approval queue is clear. New subnet and IP requests submitted by users will appear here.
+            </p>
+            <button
+              onClick={() => navigate('/requests/new')}
+              className="flex items-center gap-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-5 py-2.5 rounded-xl text-sm font-medium transition"
+            >
+              <PlusCircle className="w-4 h-4" /> Submit a Request
+            </button>
           </div>
         )}
 
-        {requests.map((req: any) => (
+        {!loading && requests.map((req: any) => (
           <div key={req.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col">
             <div className="flex justify-between items-start mb-4">
               <span className="text-xs font-semibold px-2 py-1 bg-slate-800 text-slate-300 rounded-md border border-slate-700">
